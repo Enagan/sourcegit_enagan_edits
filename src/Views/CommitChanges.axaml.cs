@@ -1,4 +1,11 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Input;
+using Avalonia.Threading;
 
 namespace SourceGit.Views
 {
