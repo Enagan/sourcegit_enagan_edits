@@ -5,9 +5,11 @@
              xmlns:vm="using:SourceGit.ViewModels"
              xmlns:v="using:SourceGit.Views"
              xmlns:c="using:SourceGit.Converters"
+             xmlns:models="clr-namespace:SourceGit.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SourceGit.Views.CommitChanges"
-             x:DataType="vm:CommitDetail">
+             x:DataType="vm:CommitDetail"
+             x:Name="ThisControl">
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="{Binding Source={x:Static vm:Preferences.Instance}, Path=Layout.CommitDetailChangesLeftWidth, Mode=TwoWay}" MinWidth="200"/>
@@ -15,9 +17,81 @@
       <ColumnDefinition Width="*" MinWidth="100"/>
     </Grid.ColumnDefinitions>
 
-    <Grid Grid.Column="0" RowDefinitions="26,*,26">
+    <Grid Grid.Column="0" RowDefinitions="Auto,26,*,26">
+      
+      
+      <!-- Author & Committer -->
+      <StackPanel Orientation="Vertical">
+        <UniformGrid Grid.Row="0" Rows="1" Margin="0,0">
+          <!-- Author -->
+          <Grid ColumnDefinitions="Auto, Auto">
+            <v:Avatar Grid.Column="0" Width="36" Height="36" Margin="8,0,8,0" User="{Binding Commit.Author}"/>
+            <StackPanel Grid.Column="1" Margin="8,0,8,0" Orientation="Vertical">
+              <Grid Margin="0,10,0,8" ColumnDefinitions="Auto,*" ClipToBounds="True">
+                <v:EnhancedSelectableTextBlock Grid.Column="0" Text="{Binding Commit.Author.Name}" Margin="2,0,8,0"/>
+                <v:EnhancedSelectableTextBlock Grid.Column="1" Text="{Binding Commit.Author.Email}" ToolTip.Tip="{Binding Commit.Author.Email}" Foreground="{DynamicResource Brush.FG2}" TextTrimming="CharacterEllipsis"/>
+              </Grid>
+              <v:EnhancedSelectableTextBlock Text="{Binding Commit.AuthorTimeStr}"
+                                             Margin="2,0,0,0"
+                                             FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize, Converter={x:Static c:DoubleConverters.Decrease}}"
+                                             Foreground="{DynamicResource Brush.FG2}"/>
+            </StackPanel>
+          </Grid>
+        </UniformGrid>
+        
+        <!-- Line -->
+        <Rectangle Height=".65" Margin="8" Fill="{DynamicResource Brush.Border2}" VerticalAlignment="Center"/>
+        
+        <!-- Base Information -->
+        <Grid RowDefinitions="24,Auto" ColumnDefinitions="Auto,*">
+          <!-- SHA -->
+          <TextBlock Grid.Row="0" Grid.Column="0" Classes="small" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="8,4,0,0" Text="{DynamicResource Text.CommitDetail.Info.SHA}" />
+          <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Height="24">
+            <TextBlock Classes="primary"
+                       Text="{Binding Commit.SHA}"
+                       Margin="12,0,4,0"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Messages -->
+          <TextBlock Grid.Row="1" Grid.Column="0" Classes="small" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="8,4,0,0" Text="{DynamicResource Text.CommitDetail.Info.Message}" />
+          <v:CommitMessagePresenter Grid.Row="1" Grid.Column="1"
+                                    Margin="12,4,8,0"
+                                    Classes="primary"
+                                    FullMessage="{Binding FullMessage}"
+                                    HorizontalAlignment="Stretch"
+                                    TextWrapping="Wrap">
+            <ToolTip.IsOpen>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="$self.IsPointerOver"/>
+                <Binding Path="$self.(ToolTip.Tip)" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+              </MultiBinding>
+            </ToolTip.IsOpen>
+
+            <v:CommitMessagePresenter.DataTemplates>
+              <DataTemplate DataType="models:Commit">
+                <StackPanel MinWidth="400" Orientation="Vertical">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <v:Avatar Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" IsHitTestVisible="False" User="{Binding Author}"/>
+                    <TextBlock Grid.Column="1" Classes="primary" Text="{Binding Author.Name}" Margin="8,0,0,0"/>
+                    <TextBlock Grid.Column="2" Classes="primary" Text="{Binding CommitterTimeStr}" Foreground="{DynamicResource Brush.FG2}" Margin="8,0,0,0"/>
+                  </Grid>
+
+                  <TextBlock Classes="primary" Margin="0,8,0,0" Text="{Binding Subject}" TextWrapping="Wrap"/>
+                </StackPanel>
+              </DataTemplate>
+            </v:CommitMessagePresenter.DataTemplates>
+          </v:CommitMessagePresenter>
+        </Grid>
+        
+        <!-- Line -->
+        <Rectangle Height=".65" Margin="8" Fill="{DynamicResource Brush.Border2}" VerticalAlignment="Center"/>
+      </StackPanel>
+      
+
+      
       <!-- Search & Display Mode -->
-      <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+      <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
         <TextBox Grid.Column="0"
                  Height="26"
                  BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}"
@@ -45,7 +119,7 @@
       </Grid>
 
       <!-- Changes -->
-      <Border Grid.Row="1" Margin="0,4,0,0" BorderBrush="{DynamicResource Brush.Border2}" BorderThickness="1" Background="{DynamicResource Brush.Contents}">
+      <Border Grid.Row="2" Margin="0,4,0,0" BorderBrush="{DynamicResource Brush.Border2}" BorderThickness="1" Background="{DynamicResource Brush.Contents}">
         <v:ChangeCollectionView SelectionMode="Single"
                                 ViewMode="{Binding Source={x:Static vm:Preferences.Instance}, Path=CommitChangeViewMode}"
                                 Changes="{Binding VisibleChanges}"
@@ -54,7 +128,7 @@
       </Border>
 
       <!-- Summary -->
-      <Border Grid.Row="2" BorderBrush="{DynamicResource Brush.Border2}" BorderThickness="1,0,1,1" Background="Transparent">
+      <Border Grid.Row="3" BorderBrush="{DynamicResource Brush.Border2}" BorderThickness="1,0,1,1" Background="Transparent">
         <TextBlock Margin="4,0,0,0"
                    Foreground="{DynamicResource Brush.FG2}"
                    HorizontalAlignment="Left" VerticalAlignment="Center">
