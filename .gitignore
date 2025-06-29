@@ -39,3 +39,6 @@ build/*.AppImage
 SourceGit.app/
 build.command
 src/Properties/launchSettings.json
+
+release/*
+!release/*.zip
