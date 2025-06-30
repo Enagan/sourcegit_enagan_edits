@@ -104,7 +104,7 @@ namespace SourceGit.ViewModels
                     return;
                 }
 
-                repoRoot = test.StdOut.Trim();
+                repoRoot = path;
             }
 
             var node = Preferences.Instance.FindOrAddNodeByRepositoryPath(repoRoot, parent, bMoveExistedNode);

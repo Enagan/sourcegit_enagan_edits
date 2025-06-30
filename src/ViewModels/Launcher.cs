@@ -106,7 +106,7 @@ namespace SourceGit.ViewModels
                 }
                 else
                 {
-                    var node = pref.FindOrAddNodeByRepositoryPath(test.StdOut.Trim(), null, false);
+                    var node = pref.FindOrAddNodeByRepositoryPath(startupRepo, null, false);
                     Welcome.Instance.Refresh();
                     OpenRepositoryInTab(node, null);
                 }

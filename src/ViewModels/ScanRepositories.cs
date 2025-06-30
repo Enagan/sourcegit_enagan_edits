@@ -124,9 +124,8 @@ namespace SourceGit.ViewModels
                     var test = new Commands.QueryRepositoryRootPath(subdir.FullName).ReadToEnd();
                     if (test.IsSuccess && !string.IsNullOrEmpty(test.StdOut))
                     {
-                        var normalized = test.StdOut.Trim().Replace('\\', '/').TrimEnd('/');
-                        if (!_managed.Contains(normalized))
-                            outs.Add(normalized);
+                        if (!_managed.Contains(normalizedSelf))
+                            outs.Add(normalizedSelf);
                     }
 
                     continue;
