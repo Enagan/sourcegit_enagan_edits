@@ -216,9 +216,11 @@ namespace SourceGit.ViewModels
             start.UseShellExecute = false;
             start.CreateNoWindow = true;
             start.RedirectStandardOutput = true;
+            start.RedirectStandardInput = true;
             start.RedirectStandardError = true;
             start.StandardOutputEncoding = Encoding.UTF8;
             start.StandardErrorEncoding = Encoding.UTF8;
+            start.StandardInputEncoding = Encoding.UTF8;
             start.WorkingDirectory = _repo.FullPath;
 
             var proc = new Process() { StartInfo = start };
