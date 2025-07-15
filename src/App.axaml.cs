@@ -592,7 +592,7 @@ namespace SourceGit
                 {
                     Dispatcher.UIThread.Invoke(() =>
                     {
-                        var node = ViewModels.Preferences.Instance.FindOrAddNodeByRepositoryPath(test.StdOut.Trim(), null, false);
+                        var node = ViewModels.Preferences.Instance.FindOrAddNodeByRepositoryPath(repo, null, false);
                         ViewModels.Welcome.Instance.Refresh();
                         _launcher?.OpenRepositoryInTab(node, null);
 
