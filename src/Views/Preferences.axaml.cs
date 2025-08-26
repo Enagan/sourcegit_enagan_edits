@@ -121,7 +121,7 @@ namespace SourceGit.Views
 
             if (pref.IsGitConfigured())
             {
-                var config = new Commands.Config(null).ReadAllAsync().Result;
+                var config = new Commands.Config(null).ReadAll();
 
                 if (config.TryGetValue("user.name", out var name))
                     DefaultUser = name;
@@ -349,7 +349,7 @@ namespace SourceGit.Views
             var tool = Models.ExternalMerger.Supported[type];
             var options = new FilePickerOpenOptions()
             {
-                FileTypeFilter = [new FilePickerFileType(tool.Name) { Patterns = tool.GetPatterns() }],
+                FileTypeFilter = [new FilePickerFileType(tool.Name) { Patterns = tool.GetPatternsToFindExecFile() }],
                 AllowMultiple = false,
             };
 

@@ -1,4 +1,5 @@
 using System;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
@@ -99,6 +100,23 @@ namespace SourceGit.Views
             Close();
         }
 
+        private void OnRowsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!_firstSelectionChangedHandled &&
+                sender is InteractiveRebaseListBox list &&
+                list.SelectedItem is ViewModels.InteractiveRebaseItem item)
+            {
+                _firstSelectionChangedHandled = true;
+
+                if (item.Action == Models.InteractiveRebaseAction.Reword)
+                {
+                    var dialog = new CommitMessageEditor();
+                    dialog.AsBuiltin(item.FullMessage, msg => item.FullMessage = msg);
+                    dialog.ShowDialog(this);
+                }
+            }
+        }
+
         private void OnSetupRowHeaderDragDrop(object sender, RoutedEventArgs e)
         {
             if (sender is Border border)
@@ -151,9 +169,6 @@ namespace SourceGit.Views
 
         private void OnButtonActionClicked(object sender, RoutedEventArgs e)
         {
-            if (DataContext is not ViewModels.InteractiveRebase vm)
-                return;
-
             if (sender is not Button { DataContext: ViewModels.InteractiveRebaseItem item } button)
                 return;
 
@@ -242,5 +257,7 @@ namespace SourceGit.Views
 
             flyout.Items.Add(menuItem);
         }
+
+        private bool _firstSelectionChangedHandled = false;
     }
 }

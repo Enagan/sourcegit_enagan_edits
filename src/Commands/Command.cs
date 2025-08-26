@@ -37,19 +37,6 @@ namespace SourceGit.Commands
         public bool RaiseError { get; set; } = true;
         public Models.ICommandLog Log { get; set; } = null;
 
-        public void Exec()
-        {
-            try
-            {
-                var start = CreateGitStartInfo(false);
-                Process.Start(start);
-            }
-            catch (Exception ex)
-            {
-                App.RaiseException(Context, ex.Message);
-            }
-        }
-
         public async Task<bool> ExecAsync()
         {
             Log?.AppendLine($"$ git {Args}\n");
@@ -61,8 +48,8 @@ namespace SourceGit.Commands
             proc.OutputDataReceived += (_, e) => HandleOutput(e.Data, errs);
             proc.ErrorDataReceived += (_, e) => HandleOutput(e.Data, errs);
 
-            Process dummy = null;
-            var dummyProcLock = new object();
+            var captured = new CapturedProcess() { Process = proc };
+            var capturedLock = new object();
             try
             {
                 proc.Start();
@@ -70,13 +57,12 @@ namespace SourceGit.Commands
                 // Not safe, please only use `CancellationToken` in readonly commands.
                 if (CancellationToken.CanBeCanceled)
                 {
-                    dummy = proc;
                     CancellationToken.Register(() =>
                     {
-                        lock (dummyProcLock)
+                        lock (capturedLock)
                         {
-                            if (dummy is { HasExited: false })
-                                dummy.Kill();
+                            if (captured is { Process: { HasExited: false } })
+                                captured.Process.Kill();
                         }
                     });
                 }
@@ -102,12 +88,9 @@ namespace SourceGit.Commands
                 HandleOutput(e.Message, errs);
             }
 
-            if (dummy != null)
+            lock (capturedLock)
             {
-                lock (dummyProcLock)
-                {
-                    dummy = null;
-                }
+                captured.Process = null;
             }
 
             Log?.AppendLine(string.Empty);
@@ -127,9 +110,33 @@ namespace SourceGit.Commands
             return true;
         }
 
+        protected Result ReadToEnd()
+        {
+            using var proc = new Process();
+            proc.StartInfo = CreateGitStartInfo(true);
+
+            try
+            {
+                proc.Start();
+            }
+            catch (Exception e)
+            {
+                return Result.Failed(e.Message);
+            }
+
+            var rs = new Result() { IsSuccess = true };
+            rs.StdOut = proc.StandardOutput.ReadToEnd();
+            rs.StdErr = proc.StandardError.ReadToEnd();
+            proc.WaitForExit();
+
+            rs.IsSuccess = proc.ExitCode == 0;
+            return rs;
+        }
+
         protected async Task<Result> ReadToEndAsync()
         {
-            using var proc = new Process() { StartInfo = CreateGitStartInfo(true) };
+            using var proc = new Process();
+            proc.StartInfo = CreateGitStartInfo(true);
 
             try
             {
@@ -149,11 +156,10 @@ namespace SourceGit.Commands
             return rs;
         }
 
-        private ProcessStartInfo CreateGitStartInfo(bool redirect)
+        protected ProcessStartInfo CreateGitStartInfo(bool redirect)
         {
             var start = new ProcessStartInfo();
             start.FileName = Native.OS.GitExecutable;
-            start.Arguments = "--no-pager -c core.quotepath=off -c credential.helper=manager ";
             start.UseShellExecute = false;
             start.CreateNoWindow = true;
 
@@ -167,11 +173,11 @@ namespace SourceGit.Commands
 
             // Force using this app as SSH askpass program
             var selfExecFile = Process.GetCurrentProcess().MainModule!.FileName;
-            if (!OperatingSystem.IsLinux())
-                start.Environment.Add("DISPLAY", "required");
             start.Environment.Add("SSH_ASKPASS", selfExecFile); // Can not use parameter here, because it invoked by SSH with `exec`
             start.Environment.Add("SSH_ASKPASS_REQUIRE", "prefer");
             start.Environment.Add("SOURCEGIT_LAUNCH_AS_ASKPASS", "TRUE");
+            if (!OperatingSystem.IsLinux())
+                start.Environment.Add("DISPLAY", "required");
 
             // If an SSH private key was provided, sets the environment.
             if (!start.Environment.ContainsKey("GIT_SSH_COMMAND") && !string.IsNullOrEmpty(SSHKey))
@@ -184,16 +190,27 @@ namespace SourceGit.Commands
                 start.Environment.Add("LC_ALL", "C");
             }
 
-            // Force using this app as git editor.
-            start.Arguments += Editor switch
-            {
-                EditorType.CoreEditor => $"""-c core.editor="{selfExecFile.Quoted()} --core-editor" """,
-                EditorType.RebaseEditor => $"""-c core.editor="{selfExecFile.Quoted()} --rebase-message-editor" -c sequence.editor="{selfExecFile.Quoted()} --rebase-todo-editor" -c rebase.abbreviateCommands=true """,
-                _ => "-c core.editor=true ",
-            };
+            var builder = new StringBuilder();
+            builder
+                .Append("--no-pager -c core.quotepath=off -c credential.helper=")
+                .Append(Native.OS.CredentialHelper)
+                .Append(' ');
 
-            // Append command args
-            start.Arguments += Args;
+            switch (Editor)
+            {
+                case EditorType.CoreEditor:
+                    builder.Append($"""-c core.editor="\"{selfExecFile}\" --core-editor" """);
+                    break;
+                case EditorType.RebaseEditor:
+                    builder.Append($"""-c core.editor="\"{selfExecFile}\" --rebase-message-editor" -c sequence.editor="\"{selfExecFile}\" --rebase-todo-editor" -c rebase.abbreviateCommands=true """);
+                    break;
+                default:
+                    builder.Append("-c core.editor=true ");
+                    break;
+            }
+
+            builder.Append(Args);
+            start.Arguments = builder.ToString();
 
             // Working directory
             if (!string.IsNullOrEmpty(WorkingDirectory))
@@ -224,6 +241,11 @@ namespace SourceGit.Commands
             }
 
             errs.Add(line);
+        }
+
+        private class CapturedProcess
+        {
+            public Process Process { get; set; } = null;
         }
 
         [GeneratedRegex(@"\d+%")]

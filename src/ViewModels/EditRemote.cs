@@ -53,7 +53,7 @@ namespace SourceGit.ViewModels
             _useSSH = Models.Remote.IsSSH(remote.URL);
 
             if (_useSSH)
-                SSHKey = new Commands.Config(repo.FullPath).GetAsync($"remote.{remote.Name}.sshkey").Result;
+                _sshkey = new Commands.Config(repo.FullPath).Get($"remote.{remote.Name}.sshkey");
         }
 
         public static ValidationResult ValidateRemoteName(string name, ValidationContext ctx)

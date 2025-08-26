@@ -60,7 +60,6 @@
   <x:String x:Key="Text.BranchCM.Rename" xml:space="preserve">${0}$ をリネームする...</x:String>
   <x:String x:Key="Text.BranchCM.Tracking" xml:space="preserve">トラッキングブランチを設定...</x:String>
   <x:String x:Key="Text.BranchCompare" xml:space="preserve">ブランチの比較</x:String>
-  <x:String x:Key="Text.BranchUpstreamInvalid" xml:space="preserve">無効な上流ブランチ!</x:String>
   <x:String x:Key="Text.Cancel" xml:space="preserve">キャンセル</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutFirstParentRevision" xml:space="preserve">親リビジョンにリセット</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutThisRevision" xml:space="preserve">このリビジョンにリセット</x:String>
@@ -242,7 +241,6 @@
   <x:String x:Key="Text.Diff.SwapCommits" xml:space="preserve">スワップ</x:String>
   <x:String x:Key="Text.Diff.SyntaxHighlight" xml:space="preserve">シンタックスハイライト</x:String>
   <x:String x:Key="Text.Diff.ToggleWordWrap" xml:space="preserve">行の折り返し</x:String>
-  <x:String x:Key="Text.Diff.UseBlockNavigation" xml:space="preserve">ブロックナビゲーションを有効化</x:String>
   <x:String x:Key="Text.Diff.UseMerger" xml:space="preserve">マージツールで開く</x:String>
   <x:String x:Key="Text.Diff.VisualLines.All" xml:space="preserve">すべての行を表示</x:String>
   <x:String x:Key="Text.Diff.VisualLines.Decr" xml:space="preserve">表示する行数を減らす</x:String>
@@ -422,7 +420,6 @@
   <x:String x:Key="Text.Period.MonthsAgo" xml:space="preserve">{0} ヶ月前</x:String>
   <x:String x:Key="Text.Period.YearsAgo" xml:space="preserve">{0} 年前</x:String>
   <x:String x:Key="Text.Period.Yesterday" xml:space="preserve">昨日</x:String>
-  <x:String x:Key="Text.PopupEnterKeyTip" xml:space="preserve">改行には'Shift+Enter'キーを使用します。 'Enter"はOKボタンのホットキーとして機能します。</x:String>
   <x:String x:Key="Text.Preferences" xml:space="preserve">設定</x:String>
   <x:String x:Key="Text.Preferences.AI" xml:space="preserve">AI</x:String>
   <x:String x:Key="Text.Preferences.AI.AnalyzeDiffPrompt" xml:space="preserve">差分分析プロンプト</x:String>
@@ -644,8 +641,6 @@
   <x:String x:Key="Text.Submodule.RelativePath.Placeholder" xml:space="preserve">このモジュールを保存するフォルダの相対パス</x:String>
   <x:String x:Key="Text.Submodule.Remove" xml:space="preserve">サブモジュールを削除</x:String>
   <x:String x:Key="Text.Sure" xml:space="preserve">OK</x:String>
-  <x:String x:Key="Text.TagCM.Copy" xml:space="preserve">タグ名をコピー</x:String>
-  <x:String x:Key="Text.TagCM.CopyMessage" xml:space="preserve">タグメッセージをコピー</x:String>
   <x:String x:Key="Text.TagCM.Delete" xml:space="preserve">${0}$ を削除...</x:String>
   <x:String x:Key="Text.TagCM.Merge" xml:space="preserve">${0}$ を ${1}$ にマージ...</x:String>
   <x:String x:Key="Text.TagCM.Push" xml:space="preserve">${0}$ をプッシュ...</x:String>

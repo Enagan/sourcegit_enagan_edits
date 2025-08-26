@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-
-using Avalonia.Controls;
 using Avalonia.Threading;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
@@ -80,8 +76,7 @@ namespace SourceGit.ViewModels
             _startPoint = (object)startPoint ?? new Models.Null();
             _endPoint = (object)endPoint ?? new Models.Null();
             CanSaveAsPatch = startPoint != null && endPoint != null;
-
-            Task.Run(Refresh);
+            Refresh();
         }
 
         public void Dispose()
@@ -94,6 +89,12 @@ namespace SourceGit.ViewModels
             _selectedChanges?.Clear();
             _searchFilter = null;
             _diffContext = null;
+        }
+
+        public void OpenChangeWithExternalDiffTool(Models.Change change)
+        {
+            var opt = new Models.DiffOption(GetSHA(_startPoint), GetSHA(_endPoint), change);
+            new Commands.DiffTool(_repo, opt).Open();
         }
 
         public void NavigateTo(string commitSHA)
@@ -118,7 +119,12 @@ namespace SourceGit.ViewModels
             VisibleChanges = [];
             SelectedChanges = [];
             IsLoading = true;
-            Task.Run(Refresh);
+            Refresh();
+        }
+
+        public string GetAbsPath(string path)
+        {
+            return Native.OS.GetAbsPath(_repo, path);
         }
 
         public void SaveAsPatch(string saveTo)
@@ -134,68 +140,6 @@ namespace SourceGit.ViewModels
         public void ClearSearchFilter()
         {
             SearchFilter = string.Empty;
-        }
-
-        public ContextMenu CreateChangeContextMenu()
-        {
-            if (_selectedChanges is not { Count: 1 })
-                return null;
-
-            var change = _selectedChanges[0];
-            var menu = new ContextMenu();
-
-            var openWithMerger = new MenuItem();
-            openWithMerger.Header = App.Text("OpenInExternalMergeTool");
-            openWithMerger.Icon = App.CreateMenuIcon("Icons.OpenWith");
-            openWithMerger.Tag = OperatingSystem.IsMacOS() ? "⌘+⇧+D" : "Ctrl+Shift+D";
-            openWithMerger.Click += (_, ev) =>
-            {
-                var opt = new Models.DiffOption(GetSHA(_startPoint), GetSHA(_endPoint), change);
-                var toolType = Preferences.Instance.ExternalMergeToolType;
-                var toolPath = Preferences.Instance.ExternalMergeToolPath;
-                new Commands.DiffTool(_repo, toolType, toolPath, opt).Open();
-                ev.Handled = true;
-            };
-            menu.Items.Add(openWithMerger);
-
-            if (change.Index != Models.ChangeState.Deleted)
-            {
-                var full = Path.GetFullPath(Path.Combine(_repo, change.Path));
-                var explore = new MenuItem();
-                explore.Header = App.Text("RevealFile");
-                explore.Icon = App.CreateMenuIcon("Icons.Explore");
-                explore.IsEnabled = File.Exists(full);
-                explore.Click += (_, ev) =>
-                {
-                    Native.OS.OpenInFileManager(full, true);
-                    ev.Handled = true;
-                };
-                menu.Items.Add(explore);
-            }
-
-            var copyPath = new MenuItem();
-            copyPath.Header = App.Text("CopyPath");
-            copyPath.Icon = App.CreateMenuIcon("Icons.Copy");
-            copyPath.Tag = OperatingSystem.IsMacOS() ? "⌘+C" : "Ctrl+C";
-            copyPath.Click += async (_, ev) =>
-            {
-                await App.CopyTextAsync(change.Path);
-                ev.Handled = true;
-            };
-            menu.Items.Add(copyPath);
-
-            var copyFullPath = new MenuItem();
-            copyFullPath.Header = App.Text("CopyFullPath");
-            copyFullPath.Icon = App.CreateMenuIcon("Icons.Copy");
-            copyFullPath.Tag = OperatingSystem.IsMacOS() ? "⌘+⇧+C" : "Ctrl+Shift+C";
-            copyFullPath.Click += async (_, e) =>
-            {
-                await App.CopyTextAsync(Native.OS.GetAbsPath(_repo, change.Path));
-                e.Handled = true;
-            };
-            menu.Items.Add(copyFullPath);
-
-            return menu;
         }
 
         private void RefreshVisible()
@@ -222,28 +166,33 @@ namespace SourceGit.ViewModels
 
         private void Refresh()
         {
-            _changes = new Commands.CompareRevisions(_repo, GetSHA(_startPoint), GetSHA(_endPoint)).ReadAsync().Result;
-
-            var visible = _changes;
-            if (!string.IsNullOrWhiteSpace(_searchFilter))
+            Task.Run(async () =>
             {
-                visible = [];
-                foreach (var c in _changes)
+                _changes = await new Commands.CompareRevisions(_repo, GetSHA(_startPoint), GetSHA(_endPoint))
+                    .ReadAsync()
+                    .ConfigureAwait(false);
+
+                var visible = _changes;
+                if (!string.IsNullOrWhiteSpace(_searchFilter))
                 {
-                    if (c.Path.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase))
-                        visible.Add(c);
+                    visible = [];
+                    foreach (var c in _changes)
+                    {
+                        if (c.Path.Contains(_searchFilter, StringComparison.OrdinalIgnoreCase))
+                            visible.Add(c);
+                    }
                 }
-            }
 
-            Dispatcher.UIThread.Post(() =>
-            {
-                VisibleChanges = visible;
-                IsLoading = false;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    VisibleChanges = visible;
+                    IsLoading = false;
 
-                if (VisibleChanges.Count > 0)
-                    SelectedChanges = [VisibleChanges[0]];
-                else
-                    SelectedChanges = [];
+                    if (VisibleChanges.Count > 0)
+                        SelectedChanges = [VisibleChanges[0]];
+                    else
+                        SelectedChanges = [];
+                });
             });
         }
 

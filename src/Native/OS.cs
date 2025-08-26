@@ -58,6 +58,12 @@ namespace SourceGit.Native
             private set;
         } = new Version(0, 0, 0);
 
+        public static string CredentialHelper
+        {
+            get;
+            set;
+        } = "manager";
+
         public static string ShellOrTerminal
         {
             get;
@@ -69,6 +75,18 @@ namespace SourceGit.Native
             get;
             set;
         } = [];
+
+        public static int ExternalMergerType
+        {
+            get;
+            set;
+        } = 0;
+
+        public static string ExternalMergerExecFile
+        {
+            get;
+            set;
+        } = string.Empty;
 
         public static bool UseSystemWindowFrame
         {
@@ -92,7 +110,7 @@ namespace SourceGit.Native
             }
             else
             {
-                throw new Exception("Platform unsupported!!!");
+                throw new PlatformNotSupportedException();
             }
         }
 
@@ -106,7 +124,7 @@ namespace SourceGit.Native
             if (OperatingSystem.IsWindows())
             {
                 var execFile = Process.GetCurrentProcess().MainModule!.FileName;
-                var portableDir = Path.Combine(Path.GetDirectoryName(execFile), "data");
+                var portableDir = Path.Combine(Path.GetDirectoryName(execFile)!, "data");
                 if (Directory.Exists(portableDir))
                 {
                     DataDir = portableDir;
@@ -150,6 +168,33 @@ namespace SourceGit.Native
                 ShellOrTerminal = string.Empty;
             else
                 ShellOrTerminal = _backend.FindTerminal(shell);
+        }
+
+        public static Models.DiffMergeTool GetDiffMergeTool(bool onlyDiff)
+        {
+            if (ExternalMergerType < 0 || ExternalMergerType >= Models.ExternalMerger.Supported.Count)
+                return null;
+
+            if (ExternalMergerType != 0 && (string.IsNullOrEmpty(ExternalMergerExecFile) || !File.Exists(ExternalMergerExecFile)))
+                return null;
+
+            var tool = Models.ExternalMerger.Supported[ExternalMergerType];
+            return new Models.DiffMergeTool(ExternalMergerExecFile, onlyDiff ? tool.DiffCmd : tool.MergeCmd);
+        }
+
+        public static void AutoSelectExternalMergeToolExecFile()
+        {
+            if (ExternalMergerType >= 0 && ExternalMergerType < Models.ExternalMerger.Supported.Count)
+            {
+                var merger = Models.ExternalMerger.Supported[ExternalMergerType];
+                var externalTool = ExternalTools.Find(x => x.Name.Equals(merger.Name, StringComparison.Ordinal));
+                if (externalTool != null)
+                    ExternalMergerExecFile = externalTool.ExecFile;
+                else if (!OperatingSystem.IsWindows() && File.Exists(merger.Finder))
+                    ExternalMergerExecFile = merger.Finder;
+                else
+                    ExternalMergerExecFile = string.Empty;
+            }
         }
 
         public static void OpenInFileManager(string path, bool select = false)
@@ -205,7 +250,7 @@ namespace SourceGit.Native
 
             try
             {
-                using var proc = Process.Start(start);
+                using var proc = Process.Start(start)!;
                 var rs = proc.StandardOutput.ReadToEnd();
                 proc.WaitForExit();
                 if (proc.ExitCode == 0 && !string.IsNullOrWhiteSpace(rs))

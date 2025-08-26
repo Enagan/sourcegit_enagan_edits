@@ -61,7 +61,6 @@
   <x:String x:Key="Text.BranchCM.Rename" xml:space="preserve">Перейменувати ${0}$...</x:String>
   <x:String x:Key="Text.BranchCM.Tracking" xml:space="preserve">Встановити відстежувану гілку...</x:String>
   <x:String x:Key="Text.BranchCompare" xml:space="preserve">Порівняти гілки</x:String>
-  <x:String x:Key="Text.BranchUpstreamInvalid" xml:space="preserve">Недійсний upstream!</x:String>
   <x:String x:Key="Text.Cancel" xml:space="preserve">СКАСУВАТИ</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutFirstParentRevision" xml:space="preserve">Скинути до батьківської ревізії</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutThisRevision" xml:space="preserve">Скинути до цієї ревізії</x:String>
@@ -247,7 +246,6 @@
   <x:String x:Key="Text.Diff.SwapCommits" xml:space="preserve">Поміняти місцями</x:String>
   <x:String x:Key="Text.Diff.SyntaxHighlight" xml:space="preserve">Підсвітка синтаксису</x:String>
   <x:String x:Key="Text.Diff.ToggleWordWrap" xml:space="preserve">Перенос слів</x:String>
-  <x:String x:Key="Text.Diff.UseBlockNavigation" xml:space="preserve">Увімкнути навігацію блоками</x:String>
   <x:String x:Key="Text.Diff.UseMerger" xml:space="preserve">Відкрити в інструменті злиття</x:String>
   <x:String x:Key="Text.Diff.VisualLines.All" xml:space="preserve">Показати всі рядки</x:String>
   <x:String x:Key="Text.Diff.VisualLines.Decr" xml:space="preserve">Зменшити кількість видимих рядків</x:String>
@@ -427,7 +425,6 @@
   <x:String x:Key="Text.Period.MonthsAgo" xml:space="preserve">{0} місяців тому</x:String>
   <x:String x:Key="Text.Period.YearsAgo" xml:space="preserve">{0} років тому</x:String>
   <x:String x:Key="Text.Period.Yesterday" xml:space="preserve">Вчора</x:String>
-  <x:String x:Key="Text.PopupEnterKeyTip" xml:space="preserve">Використовуйте 'Shift+Enter' для введення нового рядка. 'Enter' - гаряча клавіша кнопки OK</x:String>
   <x:String x:Key="Text.Preferences" xml:space="preserve">Налаштування</x:String>
   <x:String x:Key="Text.Preferences.AI" xml:space="preserve">AI</x:String>
   <x:String x:Key="Text.Preferences.AI.AnalyzeDiffPrompt" xml:space="preserve">Промпт для аналізу різниці</x:String>
@@ -650,8 +647,6 @@
   <x:String x:Key="Text.Submodule.RelativePath.Placeholder" xml:space="preserve">Відносна тека для зберігання цього модуля.</x:String>
   <x:String x:Key="Text.Submodule.Remove" xml:space="preserve">Видалити підмодуль</x:String>
   <x:String x:Key="Text.Sure" xml:space="preserve">OK</x:String>
-  <x:String x:Key="Text.TagCM.Copy" xml:space="preserve">Копіювати назву тегу</x:String>
-  <x:String x:Key="Text.TagCM.CopyMessage" xml:space="preserve">Копіювати повідомлення тегу</x:String>
   <x:String x:Key="Text.TagCM.Delete" xml:space="preserve">Видалити ${0}$...</x:String>
   <x:String x:Key="Text.TagCM.Merge" xml:space="preserve">Злиття ${0}$ в ${1}$...</x:String>
   <x:String x:Key="Text.TagCM.Push" xml:space="preserve">Надіслати ${0}$...</x:String>

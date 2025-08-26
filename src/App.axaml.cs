@@ -17,7 +17,6 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Fonts;
-using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 
@@ -159,13 +158,12 @@ namespace SourceGit
             }
         }
 
-        public static async Task<bool> AskConfirmAsync(string message, Action onSure)
+        public static async Task<bool> AskConfirmAsync(string message)
         {
             if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
             {
                 var confirm = new Views.Confirm();
                 confirm.Message.Text = message;
-                confirm.OnSure = onSure;
                 return await confirm.ShowDialog<bool>(owner);
             }
 
@@ -344,14 +342,6 @@ namespace SourceGit
             return icon;
         }
 
-        public static IStorageProvider GetStorageProvider()
-        {
-            if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                return desktop.MainWindow?.StorageProvider;
-
-            return null;
-        }
-
         public static ViewModels.Launcher GetLauncher()
         {
             return Current is App app ? app._launcher : null;
@@ -446,7 +436,7 @@ namespace SourceGit
             if (!dirInfo.Exists || !dirInfo.Name.Equals("rebase-merge", StringComparison.Ordinal))
                 return true;
 
-            var jobsFile = Path.Combine(dirInfo.Parent!.FullName, "sourcegit_rebase_jobs.json");
+            var jobsFile = Path.Combine(dirInfo.Parent!.FullName, "sourcegit.interactive_rebase");
             if (!File.Exists(jobsFile))
                 return true;
 
@@ -491,7 +481,7 @@ namespace SourceGit
             var origHeadFile = Path.Combine(gitDir, "rebase-merge", "orig-head");
             var ontoFile = Path.Combine(gitDir, "rebase-merge", "onto");
             var doneFile = Path.Combine(gitDir, "rebase-merge", "done");
-            var jobsFile = Path.Combine(gitDir, "sourcegit_rebase_jobs.json");
+            var jobsFile = Path.Combine(gitDir, "sourcegit.interactive_rebase");
             if (!File.Exists(ontoFile) || !File.Exists(origHeadFile) || !File.Exists(doneFile) || !File.Exists(jobsFile))
                 return true;
 
@@ -587,7 +577,7 @@ namespace SourceGit
         {
             if (!string.IsNullOrEmpty(repo) && Directory.Exists(repo))
             {
-                var test = new Commands.QueryRepositoryRootPath(repo).GetResultAsync().Result;
+                var test = new Commands.QueryRepositoryRootPath(repo).GetResult();
                 if (test.IsSuccess && !string.IsNullOrEmpty(test.StdOut))
                 {
                     Dispatcher.UIThread.Invoke(() =>
@@ -618,10 +608,10 @@ namespace SourceGit
                 try
                 {
                     // Fetch latest release information.
-                    using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
-                    var data = await client.GetStringAsync("https://sourcegit-scm.github.io/data/version.json");
+                    using var client = new HttpClient();
+                    client.Timeout = TimeSpan.FromSeconds(5);
 
-                    // Parse JSON into Models.Version.
+                    var data = await client.GetStringAsync("https://sourcegit-scm.github.io/data/version.json");
                     var ver = JsonSerializer.Deserialize(data, JsonCodeGen.Default.Version);
                     if (ver == null)
                         return;

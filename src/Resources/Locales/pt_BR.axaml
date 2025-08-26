@@ -385,7 +385,6 @@
   <x:String x:Key="Text.Period.MonthsAgo" xml:space="preserve">{0} meses atrás</x:String>
   <x:String x:Key="Text.Period.YearsAgo" xml:space="preserve">{0} anos atrás</x:String>
   <x:String x:Key="Text.Period.Yesterday" xml:space="preserve">Ontem</x:String>
-  <x:String x:Key="Text.PopupEnterKeyTip" xml:space="preserve">Use 'Shift+Enter' para inserir uma nova linha. 'Enter' é a tecla de atalho do botão OK</x:String>
   <x:String x:Key="Text.Preferences" xml:space="preserve">Preferências</x:String>
   <x:String x:Key="Text.Preferences.AI" xml:space="preserve">INTELIGÊNCIA ARTIFICIAL</x:String>
   <x:String x:Key="Text.Preferences.AI.AnalyzeDiffPrompt" xml:space="preserve">Prompt para Analisar Diff</x:String>
@@ -586,8 +585,6 @@
   <x:String x:Key="Text.Submodule.RelativePath.Placeholder" xml:space="preserve">Pasta relativa para armazenar este módulo.</x:String>
   <x:String x:Key="Text.Submodule.Remove" xml:space="preserve">Excluir Submódulo</x:String>
   <x:String x:Key="Text.Sure" xml:space="preserve">OK</x:String>
-  <x:String x:Key="Text.TagCM.Copy" xml:space="preserve">Copiar Nome da Tag</x:String>
-  <x:String x:Key="Text.TagCM.CopyMessage" xml:space="preserve">Copiar mensage da Tag</x:String>
   <x:String x:Key="Text.TagCM.Delete" xml:space="preserve">Excluir ${0}$...</x:String>
   <x:String x:Key="Text.TagCM.Merge" xml:space="preserve">Mesclar ${0}$ em ${1}$...</x:String>
   <x:String x:Key="Text.TagCM.Push" xml:space="preserve">Enviar ${0}$...</x:String>

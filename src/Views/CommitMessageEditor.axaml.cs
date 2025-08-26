@@ -22,7 +22,7 @@ namespace SourceGit.Views
             var parts = content.Split('\n', 2);
             Editor.SubjectEditor.Text = parts[0];
             if (parts.Length > 1)
-                Editor.DescriptionEditor.Text = parts[1];
+                Editor.DescriptionEditor.Text = parts[1].Trim();
         }
 
         public void AsBuiltin(string msg, Action<string> onSave)
@@ -33,7 +33,7 @@ namespace SourceGit.Views
             var parts = msg.Split('\n', 2);
             Editor.SubjectEditor.Text = parts[0];
             if (parts.Length > 1)
-                Editor.DescriptionEditor.Text = parts[1];
+                Editor.DescriptionEditor.Text = parts[1].Trim();
         }
 
         protected override void OnClosed(EventArgs e)
