@@ -51,7 +51,7 @@ namespace SourceGit.Models
             LoadDefaultAvatar("noreply@github.com", "github.png");
             LoadDefaultAvatar("unrealbot@epicgames.com", "unreal.png");
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (true)
                 {
@@ -84,7 +84,7 @@ namespace SourceGit.Models
                     {
                         using var client = new HttpClient();
                         client.Timeout = TimeSpan.FromSeconds(2);
-                        var rsp = client.GetAsync(url).Result;
+                        var rsp = await client.GetAsync(url);
                         if (rsp.IsSuccessStatusCode)
                         {
                             using (var stream = rsp.Content.ReadAsStream())
@@ -189,9 +189,6 @@ namespace SourceGit.Models
                 {
                     image = Bitmap.DecodeToWidth(stream, 128);
                 }
-
-                if (image == null)
-                    return;
 
                 _resources[email] = image;
 

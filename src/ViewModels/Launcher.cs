@@ -2,7 +2,6 @@ using System;
 using System.IO;
 
 using Avalonia.Collections;
-using Avalonia.Controls;
 using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -95,7 +94,7 @@ namespace SourceGit.ViewModels
                 foreach (var w in pref.Workspaces)
                     w.IsActive = false;
 
-                var test = new Commands.QueryRepositoryRootPath(startupRepo).GetResultAsync().Result;
+                var test = new Commands.QueryRepositoryRootPath(startupRepo).GetResult();
                 if (!test.IsSuccess || string.IsNullOrEmpty(test.StdOut))
                 {
                     Pages[0].Notifications.Add(new Models.Notification
@@ -266,6 +265,7 @@ namespace SourceGit.ViewModels
                     Welcome.Instance.ClearSearchFilter();
                     last.Node = new RepositoryNode() { Id = Guid.NewGuid().ToString() };
                     last.Data = Welcome.Instance;
+                    last.Popup?.Cleanup();
                     last.Popup = null;
                     UpdateTitle();
 
@@ -345,7 +345,7 @@ namespace SourceGit.ViewModels
                 return;
             }
 
-            var isBare = new Commands.IsBareRepository(node.Id).GetResultAsync().Result;
+            var isBare = new Commands.IsBareRepository(node.Id).GetResult();
             var gitDir = isBare ? node.Id : GetRepositoryGitDir(node.Id);
             if (string.IsNullOrEmpty(gitDir))
             {
@@ -419,121 +419,6 @@ namespace SourceGit.ViewModels
             _activePage?.Notifications.Add(notification);
         }
 
-        public ContextMenu CreateContextForWorkspace()
-        {
-            var pref = Preferences.Instance;
-            var menu = new ContextMenu();
-
-            for (var i = 0; i < pref.Workspaces.Count; i++)
-            {
-                var workspace = pref.Workspaces[i];
-
-                var icon = App.CreateMenuIcon(workspace.IsActive ? "Icons.Check" : "Icons.Workspace");
-                icon.Fill = workspace.Brush;
-
-                var item = new MenuItem();
-                item.Header = workspace.Name;
-                item.Icon = icon;
-                item.Click += (_, e) =>
-                {
-                    if (!workspace.IsActive)
-                        SwitchWorkspace(workspace);
-
-                    e.Handled = true;
-                };
-
-                menu.Items.Add(item);
-            }
-
-            menu.Items.Add(new MenuItem() { Header = "-" });
-
-            var configure = new MenuItem();
-            configure.Header = App.Text("Workspace.Configure");
-            configure.Click += async (_, e) =>
-            {
-                await App.ShowDialog(new ConfigureWorkspace());
-                e.Handled = true;
-            };
-            menu.Items.Add(configure);
-
-            return menu;
-        }
-
-        public ContextMenu CreateContextForPageTab(LauncherPage page)
-        {
-            if (page == null)
-                return null;
-
-            var menu = new ContextMenu();
-            var close = new MenuItem();
-            close.Header = App.Text("PageTabBar.Tab.Close");
-            close.Tag = OperatingSystem.IsMacOS() ? "⌘+W" : "Ctrl+W";
-            close.Click += (_, e) =>
-            {
-                CloseTab(page);
-                e.Handled = true;
-            };
-            menu.Items.Add(close);
-
-            var closeOthers = new MenuItem();
-            closeOthers.Header = App.Text("PageTabBar.Tab.CloseOther");
-            closeOthers.Click += (_, e) =>
-            {
-                CloseOtherTabs();
-                e.Handled = true;
-            };
-            menu.Items.Add(closeOthers);
-
-            var closeRight = new MenuItem();
-            closeRight.Header = App.Text("PageTabBar.Tab.CloseRight");
-            closeRight.Click += (_, e) =>
-            {
-                CloseRightTabs();
-                e.Handled = true;
-            };
-            menu.Items.Add(closeRight);
-
-            if (page.Node.IsRepository)
-            {
-                var bookmark = new MenuItem();
-                bookmark.Header = App.Text("PageTabBar.Tab.Bookmark");
-                bookmark.Icon = App.CreateMenuIcon("Icons.Bookmark");
-
-                for (int i = 0; i < Models.Bookmarks.Supported.Count; i++)
-                {
-                    var icon = App.CreateMenuIcon("Icons.Bookmark");
-
-                    if (i != 0)
-                        icon.Fill = Models.Bookmarks.Brushes[i];
-
-                    var dupIdx = i;
-                    var setter = new MenuItem();
-                    setter.Header = icon;
-                    setter.Click += (_, e) =>
-                    {
-                        page.Node.Bookmark = dupIdx;
-                        e.Handled = true;
-                    };
-                    bookmark.Items.Add(setter);
-                }
-                menu.Items.Add(new MenuItem() { Header = "-" });
-                menu.Items.Add(bookmark);
-
-                var copyPath = new MenuItem();
-                copyPath.Header = App.Text("PageTabBar.Tab.CopyPath");
-                copyPath.Icon = App.CreateMenuIcon("Icons.Copy");
-                copyPath.Click += async (_, e) =>
-                {
-                    await page.CopyPathAsync();
-                    e.Handled = true;
-                };
-                menu.Items.Add(new MenuItem() { Header = "-" });
-                menu.Items.Add(copyPath);
-            }
-
-            return menu;
-        }
-
         private string GetRepositoryGitDir(string repo)
         {
             var fullpath = Path.Combine(repo, ".git");
@@ -562,7 +447,7 @@ namespace SourceGit.ViewModels
                 return null;
             }
 
-            return new Commands.QueryGitDir(repo).GetResultAsync().Result;
+            return new Commands.QueryGitDir(repo).GetResult();
         }
 
         private void CloseRepositoryInTab(LauncherPage page, bool removeFromWorkspace = true)
@@ -575,6 +460,8 @@ namespace SourceGit.ViewModels
                 repo.Close();
             }
 
+            page.Popup?.Cleanup();
+            page.Popup = null;
             page.Data = null;
         }
 

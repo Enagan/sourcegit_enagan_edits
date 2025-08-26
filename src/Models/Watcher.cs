@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SourceGit.Models
 {
@@ -83,19 +82,19 @@ namespace SourceGit.Models
             }
         }
 
-        public void MarkBranchDirtyManually()
+        public void MarkBranchUpdated()
         {
-            _updateBranch = DateTime.Now.ToFileTime() - 1;
+            _updateBranch = 0;
         }
 
-        public void MarkTagDirtyManually()
+        public void MarkTagUpdated()
         {
-            _updateTags = DateTime.Now.ToFileTime() - 1;
+            _updateTags = 0;
         }
 
-        public void MarkWorkingCopyDirtyManually()
+        public void MarkWorkingCopyUpdated()
         {
-            _updateWC = DateTime.Now.ToFileTime() - 1;
+            _updateWC = 0;
         }
 
         public void Dispose()
@@ -125,44 +124,44 @@ namespace SourceGit.Models
                 if (_updateTags > 0)
                 {
                     _updateTags = 0;
-                    Task.Run(_repo.RefreshTags);
+                    _repo.RefreshTags();
                 }
 
                 if (_updateSubmodules > 0 || _repo.MayHaveSubmodules())
                 {
                     _updateSubmodules = 0;
-                    Task.Run(_repo.RefreshSubmodules);
+                    _repo.RefreshSubmodules();
                 }
 
-                Task.Run(_repo.RefreshBranches);
-                Task.Run(_repo.RefreshCommits);
-                Task.Run(_repo.RefreshWorkingCopyChanges);
-                Task.Run(_repo.RefreshWorktrees);
+                _repo.RefreshBranches();
+                _repo.RefreshCommits();
+                _repo.RefreshWorkingCopyChanges();
+                _repo.RefreshWorktrees();
             }
 
             if (_updateWC > 0 && now > _updateWC)
             {
                 _updateWC = 0;
-                Task.Run(_repo.RefreshWorkingCopyChanges);
+                _repo.RefreshWorkingCopyChanges();
             }
 
             if (_updateSubmodules > 0 && now > _updateSubmodules)
             {
                 _updateSubmodules = 0;
-                Task.Run(_repo.RefreshSubmodules);
+                _repo.RefreshSubmodules();
             }
 
             if (_updateStashes > 0 && now > _updateStashes)
             {
                 _updateStashes = 0;
-                Task.Run(_repo.RefreshStashes);
+                _repo.RefreshStashes();
             }
 
             if (_updateTags > 0 && now > _updateTags)
             {
                 _updateTags = 0;
-                Task.Run(_repo.RefreshTags);
-                Task.Run(_repo.RefreshCommits);
+                _repo.RefreshTags();
+                _repo.RefreshCommits();
             }
         }
 

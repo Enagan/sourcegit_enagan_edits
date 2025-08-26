@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-
-using Avalonia;
 using Avalonia.Media.Imaging;
 
 namespace SourceGit.Models
@@ -62,12 +60,9 @@ namespace SourceGit.Models
     public partial class TextDiff
     {
         public string File { get; set; } = string.Empty;
-        public List<TextDiffLine> Lines { get; set; } = new List<TextDiffLine>();
-        public Vector ScrollOffset { get; set; } = Vector.Zero;
-        public int MaxLineNumber = 0;
-
-        public string Repo { get; set; } = null;
         public DiffOption Option { get; set; } = null;
+        public List<TextDiffLine> Lines { get; set; } = new List<TextDiffLine>();
+        public int MaxLineNumber = 0;
 
         public TextDiffSelection MakeSelection(int startLine, int endLine, bool isCombined, bool isOldSide)
         {
@@ -149,6 +144,7 @@ namespace SourceGit.Models
             var fileGuid = isTracked ? fileBlobGuid : "00000000";
 
             using var writer = new StreamWriter(output);
+            writer.NewLine = "\n";
             writer.WriteLine($"diff --git a/{change.Path} b/{change.Path}");
             if (!revert && !isTracked)
                 writer.WriteLine("new file mode 100644");
@@ -193,6 +189,7 @@ namespace SourceGit.Models
             var orgFile = !string.IsNullOrEmpty(change.OriginalPath) ? change.OriginalPath : change.Path;
 
             using var writer = new StreamWriter(output);
+            writer.NewLine = "\n";
             writer.WriteLine($"diff --git a/{change.Path} b/{change.Path}");
             writer.WriteLine($"index 00000000...{fileTreeGuid} 100644");
             writer.WriteLine($"--- a/{orgFile}");
@@ -306,6 +303,7 @@ namespace SourceGit.Models
             var orgFile = !string.IsNullOrEmpty(change.OriginalPath) ? change.OriginalPath : change.Path;
 
             using var writer = new StreamWriter(output);
+            writer.NewLine = "\n";
             writer.WriteLine($"diff --git a/{change.Path} b/{change.Path}");
             writer.WriteLine($"index 00000000...{fileTreeGuid} 100644");
             writer.WriteLine($"--- a/{orgFile}");

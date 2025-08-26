@@ -17,6 +17,7 @@ namespace SourceGit.Native
     [SupportedOSPlatform("windows")]
     internal class Windows : OS.IBackend
     {
+        [StructLayout(LayoutKind.Sequential)]
         internal struct RECT
         {
             public int left;
@@ -203,19 +204,23 @@ namespace SourceGit.Native
 
         public void OpenTerminal(string workdir)
         {
-            if (!File.Exists(OS.ShellOrTerminal))
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var cwd = string.IsNullOrEmpty(workdir) ? home : workdir;
+            var terminal = OS.ShellOrTerminal;
+
+            if (!File.Exists(terminal))
             {
                 App.RaiseException(workdir, "Terminal is not specified! Please confirm that the correct shell/terminal has been configured.");
                 return;
             }
 
             var startInfo = new ProcessStartInfo();
-            startInfo.WorkingDirectory = workdir;
-            startInfo.FileName = OS.ShellOrTerminal;
+            startInfo.WorkingDirectory = cwd;
+            startInfo.FileName = terminal;
 
             // Directly launching `Windows Terminal` need to specify the `-d` parameter
-            if (OS.ShellOrTerminal.EndsWith("wt.exe", StringComparison.OrdinalIgnoreCase))
-                startInfo.Arguments = $"-d {workdir.Quoted()}";
+            if (terminal.EndsWith("wt.exe", StringComparison.OrdinalIgnoreCase))
+                startInfo.Arguments = $"-d {cwd.Quoted()}";
 
             Process.Start(startInfo);
         }
@@ -389,7 +394,7 @@ namespace SourceGit.Native
 
             try
             {
-                using var proc = Process.Start(startInfo);
+                using var proc = Process.Start(startInfo)!;
                 var output = proc.StandardOutput.ReadToEnd();
                 proc.WaitForExit();
 
@@ -450,7 +455,8 @@ namespace SourceGit.Native
             var files = dir.GetFiles();
             foreach (var f in files)
             {
-                if (f.Name.EndsWith(".sln", StringComparison.OrdinalIgnoreCase))
+                if (f.Name.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase) ||
+                    f.Name.EndsWith(".sln", StringComparison.OrdinalIgnoreCase))
                     return f.FullName;
             }
 

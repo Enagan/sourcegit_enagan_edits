@@ -54,20 +54,6 @@ namespace SourceGit.ViewModels
             get => Counter > 0 ? $"({Counter})" : string.Empty;
         }
 
-        public string Tooltip
-        {
-            get
-            {
-                if (Backend is Models.Branch b)
-                    return b.FriendlyName;
-
-                if (Backend is Models.Remote r)
-                    return r.URL;
-
-                return null;
-            }
-        }
-
         private Models.FilterMode _filterMode = Models.FilterMode.None;
         private bool _isExpanded = false;
         private CornerRadius _cornerRadius = new CornerRadius(4);
@@ -266,8 +252,8 @@ namespace SourceGit.ViewModels
                     SortNodesByTime(node.Children);
             }
 
-            private readonly Models.BranchSortMode _localSortMode = Models.BranchSortMode.Name;
-            private readonly Models.BranchSortMode _remoteSortMode = Models.BranchSortMode.Name;
+            private readonly Models.BranchSortMode _localSortMode;
+            private readonly Models.BranchSortMode _remoteSortMode;
             private readonly HashSet<string> _expanded = new HashSet<string>();
         }
     }

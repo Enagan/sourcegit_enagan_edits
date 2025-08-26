@@ -282,8 +282,8 @@
             <Grid RowDefinitions="*,1,Auto">
               <ListBox Grid.Row="0"
                        Background="Transparent"
-                       ItemsSource="{Binding IssueTrackerRules}"
-                       SelectedItem="{Binding SelectedIssueTrackerRule, Mode=TwoWay}"
+                       ItemsSource="{Binding IssueTrackers}"
+                       SelectedItem="{Binding SelectedIssueTracker, Mode=TwoWay}"
                        SelectionMode="Single">
                 <ListBox.Styles>
                   <Style Selector="ListBoxItem">
@@ -300,7 +300,7 @@
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemTemplate>
-                  <DataTemplate DataType="m:IssueTrackerRule">
+                  <DataTemplate DataType="m:IssueTracker">
                     <Grid ColumnDefinitions="Auto,*">
                       <Path Grid.Column="0" Width="14" Height="14" Data="{StaticResource Icons.Issue}"/>
                       <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="8,0" TextTrimming="CharacterEllipsis"/>
@@ -315,15 +315,16 @@
                 <Button Classes="icon_button">
                   <Button.Flyout>
                     <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.NewRule}" Command="{Binding NewIssueTracker}"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.NewRule}" Click="OnNewCustomIssueTracker"/>
                       <MenuItem Header="-"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitHub}" Command="{Binding AddSampleGitHubIssueTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleJira}" Command="{Binding AddSampleJiraIssueTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleAzure}" Command="{Binding AddSampleAzureWorkItemTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitLabIssue}" Command="{Binding AddSampleGitLabIssueTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitLabMergeRequest}" Command="{Binding AddSampleGitLabMergeRequestTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGiteeIssue}" Command="{Binding AddSampleGiteeIssueTracker}"/>
-                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGiteePullRequest}" Command="{Binding AddSampleGiteePullRequestTracker}"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitHub}" Click="OnAddGitHubIssueTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleJira}" Click="OnAddJiraIssueTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleAzure}" Click="OnAddAzureWorkItemTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitLabIssue}" Click="OnAddGitLabIssueTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGitLabMergeRequest}" Click="OnAddGitLabMergeRequestTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGiteeIssue}" Click="OnAddGiteeIssueTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGiteePullRequest}" Click="OnAddGiteePullRequestTracker"/>
+                      <MenuItem Header="{DynamicResource Text.Configure.IssueTracker.AddSampleGerritChangeIdCommit}" Click="OnAddGerritChangeIdTracker"/>
                     </MenuFlyout>
                   </Button.Flyout>
                   <Path Width="14" Height="14" Data="{StaticResource Icons.Plus}"/>
@@ -331,7 +332,7 @@
 
                 <Rectangle Width="1" Fill="{DynamicResource Brush.Border2}" HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
 
-                <Button Classes="icon_button" Command="{Binding RemoveSelectedIssueTracker}">
+                <Button Classes="icon_button" Click="OnRemoveIssueTracker">
                   <Path Width="14" Height="14" Data="{StaticResource Icons.Minus}"/>
                 </Button>
 
@@ -342,7 +343,7 @@
 
           <ContentControl Grid.Column="1" Margin="16,0,0,0">
             <ContentControl.Content>
-              <Binding Path="SelectedIssueTrackerRule">
+              <Binding Path="SelectedIssueTracker">
                 <Binding.TargetNullValue>
                   <Path Width="64" Height="64"
                         HorizontalAlignment="Center"
@@ -354,8 +355,8 @@
             </ContentControl.Content>
 
             <ContentControl.DataTemplates>
-              <DataTemplate DataType="m:IssueTrackerRule">
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+              <DataTemplate DataType="m:IssueTracker">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,32">
                   <TextBlock Grid.Row="0" Text="{DynamicResource Text.Configure.IssueTracker.RuleName}"/>
                   <TextBox Grid.Row="1" Margin="0,4,0,0" CornerRadius="3" Height="28" Text="{Binding Name, Mode=TwoWay}"/>
 
@@ -369,6 +370,12 @@
                   <TextBlock Grid.Row="4" Margin="0,12,0,0" Text="{DynamicResource Text.Configure.IssueTracker.URLTemplate}"/>
                   <TextBox Grid.Row="5" Margin="0,4,0,0" CornerRadius="3" Height="28" Text="{Binding URLTemplate, Mode=TwoWay}"/>
                   <TextBlock Grid.Row="6" Margin="0,2,0,0" Text="{DynamicResource Text.Configure.IssueTracker.URLTemplate.Tip}" Foreground="{DynamicResource Brush.FG2}"/>
+
+                  <CheckBox Grid.Row="7" Grid.Column="1"
+                            Margin="0,4,0,0"
+                            Content="{DynamicResource Text.Configure.IssueTracker.Share}"
+                            IsChecked="{Binding IsShared, Mode=TwoWay}"
+                            Click="OnIssueTrackerIsSharedChanged"/>
                 </Grid>
               </DataTemplate>
             </ContentControl.DataTemplates>
@@ -381,7 +388,7 @@
           <TextBlock Classes="tab_header" Text="{DynamicResource Text.Configure.CustomAction}"/>
         </TabItem.Header>
 
-        <Grid ColumnDefinitions="200,*" MinHeight="380" Margin="0,8,0,16">
+        <Grid ColumnDefinitions="200,*" MinHeight="360" Margin="0,8,0,16">
           <Border Grid.Column="0"
                   BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}"
                   Background="{DynamicResource Brush.Contents}">
@@ -473,20 +480,8 @@
                     <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Commit}"/>
                     <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Branch}"/>
                     <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Tag}"/>
+                    <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Remote}"/>
                   </ComboBox>
-
-                  <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.Executable}"/>
-                  <TextBox Margin="0,4,0,0" Height="28" CornerRadius="3" Text="{Binding Executable, Mode=TwoWay}">
-                    <TextBox.InnerRightContent>
-                      <Button Classes="icon_button" Width="30" Height="30" Click="SelectExecutableForCustomAction">
-                        <Path Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.FG1}"/>
-                      </Button>
-                    </TextBox.InnerRightContent>
-                  </TextBox>
-
-                  <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.Arguments}"/>
-                  <TextBox Margin="0,4,0,0" CornerRadius="3" Height="28" Text="{Binding Arguments, Mode=TwoWay}"/>
-                  <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Text="{DynamicResource Text.Configure.CustomAction.Arguments.Tip}" Foreground="{DynamicResource Brush.FG2}"/>
 
                   <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.InputControls}"/>
                   <Button Margin="0,4,0,0" Classes="flat" Height="28" Click="EditCustomActionControls">
@@ -498,7 +493,23 @@
                       </Border>
                     </StackPanel>
                   </Button>
-                  <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Text="{DynamicResource Text.Configure.CustomAction.InputControls.Tip}" Foreground="{DynamicResource Brush.FG2}"/>
+
+                  <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.Executable}"/>
+                  <TextBox Margin="0,4,0,0" Height="28" CornerRadius="3" Text="{Binding Executable, Mode=TwoWay}">
+                    <TextBox.InnerRightContent>
+                      <Button Classes="icon_button" Width="30" Height="30" Click="SelectExecutableForCustomAction">
+                        <Path Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.FG1}"/>
+                      </Button>
+                    </TextBox.InnerRightContent>
+                  </TextBox>
+
+                  <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.Arguments}"/>
+                  <Grid Margin="0,4,0,0" ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" CornerRadius="3" Height="28" Text="{Binding Arguments, Mode=TwoWay}"/>
+                    <Border Grid.Column="1" Width="22" Height="28" Background="Transparent" VerticalAlignment="Center" ToolTip.Tip="{DynamicResource Text.Configure.CustomAction.Arguments.Tip}">
+                      <Path Width="14" Height="14" Data="{StaticResource Icons.Info}"/>
+                    </Border>
+                  </Grid>
 
                   <CheckBox Margin="0,8,0,0" Content="{DynamicResource Text.Configure.CustomAction.WaitForExit}" IsChecked="{Binding WaitForExit, Mode=TwoWay}"/>
                 </StackPanel>

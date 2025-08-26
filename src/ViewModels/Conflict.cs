@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace SourceGit.ViewModels
 {
@@ -19,7 +20,7 @@ namespace SourceGit.ViewModels
         {
             Name = branch.Name;
             Head = branch.Head;
-            Revision = new Commands.QuerySingleCommit(repo.FullPath, branch.Head).GetResultAsync().Result ?? new Models.Commit() { SHA = branch.Head };
+            Revision = new Commands.QuerySingleCommit(repo.FullPath, branch.Head).GetResult() ?? new Models.Commit() { SHA = branch.Head };
         }
     }
 
@@ -68,7 +69,7 @@ namespace SourceGit.ViewModels
             if (!isSubmodule && (_change.ConflictReason is Models.ConflictReason.BothAdded or Models.ConflictReason.BothModified))
             {
                 CanUseExternalMergeTool = true;
-                IsResolved = new Commands.IsConflictResolved(repo.FullPath, change).GetResultAsync().Result;
+                IsResolved = new Commands.IsConflictResolved(repo.FullPath, change).GetResult();
             }
 
             switch (wc.InProgressContext)
@@ -101,19 +102,19 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public void UseTheirs()
+        public async Task UseTheirsAsync()
         {
-            _wc.UseTheirs([_change]);
+            await _wc.UseTheirsAsync([_change]);
         }
 
-        public void UseMine()
+        public async Task UseMineAsync()
         {
-            _wc.UseMine([_change]);
+            await _wc.UseMineAsync([_change]);
         }
 
-        public async void OpenExternalMergeTool()
+        public async Task OpenExternalMergeToolAsync()
         {
-            await _wc.UseExternalMergeTool(_change);
+            await _wc.UseExternalMergeToolAsync(_change);
         }
 
         private WorkingCopy _wc = null;

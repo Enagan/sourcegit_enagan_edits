@@ -24,6 +24,13 @@
                      Width="48"
                      GroupName="SearchGroup"
                      IsChecked="{Binding !IsSearching, Mode=OneWay}">
+          <ToolTip.Tip>
+            <TextBlock>
+              <Run Text="{DynamicResource Text.Repository.Dashboard}" Foreground="{DynamicResource Brush.FG1}"/>
+              <Run Text=" "/>
+              <Run Text="{OnPlatform Ctrl+Shift+H, macOS=⌘+⇧+H}" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
+            </TextBlock>
+          </ToolTip.Tip>
           <Path Width="12" Height="12" Stretch="Fill" HorizontalAlignment="Center" Data="{StaticResource Icons.Home}"/>
         </RadioButton>
 
@@ -31,6 +38,13 @@
                      Width="48"
                      GroupName="SearchGroup"
                      IsChecked="{Binding IsSearching, Mode=TwoWay}">
+          <ToolTip.Tip>
+            <TextBlock>
+              <Run Text="{DynamicResource Text.Repository.Search}" Foreground="{DynamicResource Brush.FG1}"/>
+              <Run Text=" "/>
+              <Run Text="{OnPlatform Ctrl+F, macOS=⌘+F}" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
+            </TextBlock>
+          </ToolTip.Tip>
           <Path Width="12" Height="12" Stretch="Fill" HorizontalAlignment="Center" Data="{StaticResource Icons.Search}"/>
         </RadioButton>
       </StackPanel>
@@ -83,7 +97,7 @@
               </ListBox.ItemsPanel>
 
               <ListBoxItem>
-                <Grid Classes="view_mode" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
+                <Grid Classes="view_mode" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
                   <Path Grid.Column="0" Classes="icon" Data="{StaticResource Icons.Histories}"/>
                   <TextBlock Grid.Column="1" Classes="header" Text="{DynamicResource Text.Histories}"/>
 
@@ -91,39 +105,11 @@
                                 Classes="line_path"
                                 Width="26" Height="26"
                                 Background="Transparent"
-                                IsChecked="{Binding EnableReflog, Mode=TwoWay}">
-                    <ToolTip.Tip>
-                      <TextBlock>
-                        <Run Text="{DynamicResource Text.Repository.ShowLostCommits}"/>
-                        <Run Text=" "/>
-                        <Run Text="--reflog" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
-                      </TextBlock>
-                    </ToolTip.Tip>
-                    <Path Width="12" Height="12" Data="{StaticResource Icons.Reference}"/>
-                  </ToggleButton>
-                  <ToggleButton Grid.Column="3"
-                                Classes="line_path"
-                                Width="26" Height="26"
-                                Background="Transparent"
-                                IsChecked="{Binding EnableFirstParentInHistories, Mode=TwoWay}">
-                    <ToolTip.Tip>
-                      <TextBlock>
-                        <Run Text="{DynamicResource Text.Repository.ShowFirstParentOnly}"/>
-                        <Run Text=" "/>
-                        <Run Text="--first-parent" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
-                      </TextBlock>
-                    </ToolTip.Tip>
-                    <Path Width="12" Height="12" Data="{StaticResource Icons.FirstParentFilter}"/>
-                  </ToggleButton>
-                  <ToggleButton Grid.Column="4"
-                                Classes="line_path"
-                                Width="26" Height="26"
-                                Background="Transparent"
                                 IsChecked="{Binding OnlyHighlightCurrentBranchInHistories, Mode=TwoWay}"
                                 ToolTip.Tip="{DynamicResource Text.Repository.OnlyHighlightCurrentBranchInGraph}">
                     <Path Width="12" Height="12" Data="{StaticResource Icons.LightOn}"/>
                   </ToggleButton>
-                  <ToggleButton Grid.Column="5"
+                  <ToggleButton Grid.Column="3"
                                 Classes="line_path"
                                 Width="26" Height="26"
                                 Background="Transparent"
@@ -131,10 +117,11 @@
                                 ToolTip.Tip="{DynamicResource Text.Repository.UseRelativeTimeInGraph}">
                     <Path Width="12" Height="12" Data="{StaticResource Icons.Stopwatch}"/>
                   </ToggleButton>
-                  <Button Grid.Column="6"
+                  <Button Grid.Column="4"
                           Classes="icon_button"
                           Width="26" Height="26"
-                          Click="OnOpenAdvancedHistoriesOption">
+                          Click="OnOpenAdvancedHistoriesOption"
+                          ToolTip.Tip="{DynamicResource Text.Repository.MoreOptions}">
                     <Path Width="12" Height="12" Data="{StaticResource Icons.More}"/>
                   </Button>
                 </Grid>
@@ -392,7 +379,7 @@
                       Classes="icon_button"
                       Width="14"
                       Margin="8,0"
-                      Command="{Binding PruneWorktrees}"
+                      Click="OnPruneWorktrees"
                       IsVisible="{Binding Worktrees, Converter={x:Static c:ListConverters.IsNotNullOrEmpty}}"
                       ToolTip.Tip="{DynamicResource Text.Repository.Worktrees.Prune}">
                 <Path Width="12" Height="12" Data="{StaticResource Icons.Loading}"/>
@@ -713,7 +700,7 @@
                 BorderThickness="0"
                 Content="{DynamicResource Text.Repository.Abort}"
                 Padding="8,2" Margin="0,0,8,0"
-                Command="{Binding AbortMerge}"/>
+                Click="OnAbortInProgress"/>
       </Grid>
 
       <Grid Grid.Row="1"
@@ -843,7 +830,7 @@
           <DataTemplate DataType="vm:Histories">
             <v:Histories CurrentBranch="{Binding $parent[v:Repository].((vm:Repository)DataContext).CurrentBranch}"
                          Bisect="{Binding Bisect}"
-                         IssueTrackerRules="{Binding $parent[v:Repository].((vm:Repository)DataContext).Settings.IssueTrackerRules}"
+                         IssueTrackers="{Binding $parent[v:Repository].((vm:Repository)DataContext).IssueTrackers}"
                          OnlyHighlightCurrentBranch="{Binding $parent[v:Repository].((vm:Repository)DataContext).OnlyHighlightCurrentBranchInHistories}"
                          NavigationId="{Binding NavigationId}"/>
           </DataTemplate>

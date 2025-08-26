@@ -119,6 +119,12 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _layout, value);
         }
 
+        public bool ShowLocalChangesByDefault
+        {
+            get;
+            set;
+        } = false;
+
         public int MaxHistoryCommits
         {
             get => _maxHistoryCommits;
@@ -255,16 +261,16 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _useFullTextDiff, value);
         }
 
-        public bool UseBlockNavigationInDiffView
-        {
-            get => _useBlockNavigationInDiffView;
-            set => SetProperty(ref _useBlockNavigationInDiffView, value);
-        }
-
         public int LFSImageActiveIdx
         {
             get => _lfsImageActiveIdx;
             set => SetProperty(ref _lfsImageActiveIdx, value);
+        }
+
+        public bool EnableCompactFoldersInChangesTree
+        {
+            get => _enableCompactFoldersInChangesTree;
+            set => SetProperty(ref _enableCompactFoldersInChangesTree, value);
         }
 
         public Models.ChangeViewMode UnstagedChangeViewMode
@@ -310,6 +316,20 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _gitDefaultCloneDir, value);
         }
 
+        public bool UseLibsecretInsteadOfGCM
+        {
+            get => Native.OS.CredentialHelper.Equals("libsecret", StringComparison.Ordinal);
+            set
+            {
+                var helper = value ? "libsecret" : "manager";
+                if (OperatingSystem.IsLinux() && !Native.OS.CredentialHelper.Equals(helper, StringComparison.Ordinal))
+                {
+                    Native.OS.CredentialHelper = helper;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public int ShellOrTerminal
         {
             get => _shellOrTerminal;
@@ -342,25 +362,34 @@ namespace SourceGit.ViewModels
 
         public int ExternalMergeToolType
         {
-            get => _externalMergeToolType;
+            get => Native.OS.ExternalMergerType;
             set
             {
-                var changed = SetProperty(ref _externalMergeToolType, value);
-                if (changed && !OperatingSystem.IsWindows() && value > 0 && value < Models.ExternalMerger.Supported.Count)
+                if (Native.OS.ExternalMergerType != value)
                 {
-                    var tool = Models.ExternalMerger.Supported[value];
-                    if (File.Exists(tool.Exec))
-                        ExternalMergeToolPath = tool.Exec;
-                    else
-                        ExternalMergeToolPath = string.Empty;
+                    Native.OS.ExternalMergerType = value;
+                    OnPropertyChanged();
+
+                    if (!_isLoading)
+                    {
+                        Native.OS.AutoSelectExternalMergeToolExecFile();
+                        OnPropertyChanged(nameof(ExternalMergeToolPath));
+                    }
                 }
             }
         }
 
         public string ExternalMergeToolPath
         {
-            get => _externalMergeToolPath;
-            set => SetProperty(ref _externalMergeToolPath, value);
+            get => Native.OS.ExternalMergerExecFile;
+            set
+            {
+                if (!Native.OS.ExternalMergerExecFile.Equals(value, StringComparison.Ordinal))
+                {
+                    Native.OS.ExternalMergerExecFile = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public uint StatisticsSampleColor
@@ -672,7 +701,7 @@ namespace SourceGit.ViewModels
         private double _defaultFontSize = 13;
         private double _editorFontSize = 13;
         private int _editorTabWidth = 4;
-        private LayoutInfo _layout = new LayoutInfo();
+        private LayoutInfo _layout = new();
 
         private int _maxHistoryCommits = 20000;
         private int _subjectGuideLength = 50;
@@ -693,8 +722,8 @@ namespace SourceGit.ViewModels
         private bool _enableDiffViewWordWrap = false;
         private bool _showHiddenSymbolsInDiffView = false;
         private bool _useFullTextDiff = false;
-        private bool _useBlockNavigationInDiffView = false;
         private int _lfsImageActiveIdx = 0;
+        private bool _enableCompactFoldersInChangesTree = false;
 
         private Models.ChangeViewMode _unstagedChangeViewMode = Models.ChangeViewMode.List;
         private Models.ChangeViewMode _stagedChangeViewMode = Models.ChangeViewMode.List;
@@ -702,11 +731,7 @@ namespace SourceGit.ViewModels
         private Models.ChangeViewMode _stashChangeViewMode = Models.ChangeViewMode.List;
 
         private string _gitDefaultCloneDir = string.Empty;
-
         private int _shellOrTerminal = -1;
-        private int _externalMergeToolType = 0;
-        private string _externalMergeToolPath = string.Empty;
-
         private uint _statisticsSampleColor = 0xFF00FF00;
     }
 }

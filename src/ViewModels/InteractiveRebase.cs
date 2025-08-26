@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -10,12 +11,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
 {
+    public record InteractiveRebasePrefill(string SHA, Models.InteractiveRebaseAction Action);
+
     public class InteractiveRebaseItem : ObservableObject
     {
         public Models.Commit Commit
         {
             get;
-            private set;
         }
 
         public bool CanSquashOrFixup
@@ -81,7 +83,6 @@ namespace SourceGit.ViewModels
         public Models.Commit On
         {
             get;
-            private set;
         }
 
         public bool AutoStash
@@ -90,9 +91,9 @@ namespace SourceGit.ViewModels
             set;
         } = true;
 
-        public AvaloniaList<Models.IssueTrackerRule> IssueTrackerRules
+        public AvaloniaList<Models.IssueTracker> IssueTrackers
         {
-            get => _repo.Settings.IssueTrackerRules;
+            get => _repo.IssueTrackers;
         }
 
         public bool IsLoading
@@ -104,7 +105,6 @@ namespace SourceGit.ViewModels
         public AvaloniaList<InteractiveRebaseItem> Items
         {
             get;
-            private set;
         } = [];
 
         public InteractiveRebaseItem SelectedItem
@@ -120,22 +120,19 @@ namespace SourceGit.ViewModels
         public CommitDetail DetailContext
         {
             get;
-            private set;
         }
 
-        public InteractiveRebase(Repository repo, Models.Branch current, Models.Commit on)
+        public InteractiveRebase(Repository repo, Models.Commit on, InteractiveRebasePrefill prefill = null)
         {
-            var repoPath = repo.FullPath;
             _repo = repo;
-
-            Current = current;
+            Current = repo.CurrentBranch;
             On = on;
             IsLoading = true;
             DetailContext = new CommitDetail(repo, false);
 
             Task.Run(async () =>
             {
-                var commits = await new Commands.QueryCommitsForInteractiveRebase(repoPath, on.SHA)
+                var commits = await new Commands.QueryCommitsForInteractiveRebase(_repo.FullPath, on.SHA)
                     .GetResultAsync()
                     .ConfigureAwait(false);
 
@@ -146,11 +143,21 @@ namespace SourceGit.ViewModels
                     list.Add(new InteractiveRebaseItem(c.Commit, c.Message, i < commits.Count - 1));
                 }
 
+                var selected = list.Count > 0 ? list[0] : null;
+                if (prefill != null)
+                {
+                    var item = list.Find(x => x.Commit.SHA.Equals(prefill.SHA, StringComparison.Ordinal));
+                    if (item != null)
+                    {
+                        item.Action = prefill.Action;
+                        selected = item;
+                    }
+                }
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     Items.AddRange(list);
-                    if (list.Count > 0)
-                        SelectedItem = list[0];
+                    SelectedItem = selected;
                     IsLoading = false;
                 });
             });
@@ -198,7 +205,7 @@ namespace SourceGit.ViewModels
         {
             _repo.SetWatcherEnabled(false);
 
-            var saveFile = Path.Combine(_repo.GitDir, "sourcegit_rebase_jobs.json");
+            var saveFile = Path.Combine(_repo.GitDir, "sourcegit.interactive_rebase");
             var collection = new Models.InteractiveRebaseJobCollection();
             collection.OrigHead = _repo.CurrentBranch.Head;
             collection.Onto = On.SHA;

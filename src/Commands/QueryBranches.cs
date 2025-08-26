@@ -94,8 +94,10 @@ namespace SourceGit.Commands
                 branch.IsLocal = true;
             }
 
+            ulong.TryParse(parts[1], out var committerDate);
+
             branch.FullName = refName;
-            branch.CommitterDate = ulong.Parse(parts[1]);
+            branch.CommitterDate = committerDate;
             branch.Head = parts[2];
             branch.IsCurrent = parts[3] == "*";
             branch.Upstream = parts[4];
