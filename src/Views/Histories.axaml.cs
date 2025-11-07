@@ -833,10 +833,6 @@ namespace SourceGit.Views
             var actions = repo.GetCustomActions(Models.CustomActionScope.Commit);
             if (actions.Count > 0)
             {
-                var custom = new MenuItem();
-                custom.Header = App.Text("CommitCM.CustomAction");
-                custom.Icon = App.CreateMenuIcon("Icons.Action");
-
                 foreach (var action in actions)
                 {
                     var (dup, label) = action;
@@ -849,10 +845,9 @@ namespace SourceGit.Views
                         e.Handled = true;
                     };
 
-                    custom.Items.Add(item);
+                    menu.Items.Add(item);
                 }
-
-                menu.Items.Add(custom);
+                
                 menu.Items.Add(new MenuItem() { Header = "-" });
             }
 
