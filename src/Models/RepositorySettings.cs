@@ -158,6 +158,12 @@ namespace SourceGit.Models
             set;
         } = false;
 
+        public bool NoVerifyOnCommit
+        {
+            get;
+            set;
+        } = false;
+
         public bool IncludeUntrackedWhenStash
         {
             get;
@@ -225,6 +231,12 @@ namespace SourceGit.Models
         } = 0;
 
         public string LastCommitMessage
+        {
+            get;
+            set;
+        } = string.Empty;
+
+        public string ConventionalTypesOverride
         {
             get;
             set;

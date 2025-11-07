@@ -339,13 +339,21 @@ namespace SourceGit.Views
 
         private async void OnOpenConventionalCommitHelper(object _, RoutedEventArgs e)
         {
-            var toplevel = TopLevel.GetTopLevel(this);
-            if (toplevel is Window owner)
+            var owner = TopLevel.GetTopLevel(this) as Window;
+            if (owner == null)
+                return;
+
+            var conventionalTypesOverride = owner switch
             {
-                var vm = new ViewModels.ConventionalCommitMessageBuilder(text => Text = text);
-                var builder = new ConventionalCommitMessageBuilder() { DataContext = vm };
-                await builder.ShowDialog(owner);
-            }
+                Launcher { DataContext: ViewModels.Launcher { ActivePage: { Data: ViewModels.Repository repo } } } => repo.Settings.ConventionalTypesOverride,
+                RepositoryConfigure { DataContext: ViewModels.RepositoryConfigure config } => config.ConventionalTypesOverride,
+                CommitMessageEditor editor => editor.ConventionalTypesOverride,
+                _ => string.Empty
+            };
+
+            var vm = new ViewModels.ConventionalCommitMessageBuilder(conventionalTypesOverride, text => Text = text);
+            var builder = new ConventionalCommitMessageBuilder() { DataContext = vm };
+            await builder.ShowDialog(owner);
 
             e.Handled = true;
         }
@@ -353,6 +361,26 @@ namespace SourceGit.Views
         private async void CopyAllText(object sender, RoutedEventArgs e)
         {
             await App.CopyTextAsync(Text);
+            e.Handled = true;
+        }
+
+        private async void PasteAndReplaceAllText(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var text = await App.GetClipboardTextAsync();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    var parts = text.ReplaceLineEndings("\n").Split("\n", 2);
+                    var subject = parts[0];
+                    Text = parts.Length > 1 ? $"{subject}\n\n{parts[1].Trim()}" : subject;
+                }
+            }
+            catch
+            {
+                // Ignore exceptions.
+            }
+
             e.Handled = true;
         }
 

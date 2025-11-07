@@ -10,6 +10,20 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
 {
+    public class CommitDetailSharedData
+    {
+        public int ActiveTabIndex
+        {
+            get;
+            set;
+        }
+
+        public CommitDetailSharedData()
+        {
+            ActiveTabIndex = Preferences.Instance.ShowChangesInCommitDetailByDefault ? 1 : 0;
+        }
+    }
+
     public partial class CommitDetail : ObservableObject, IDisposable
     {
         public Repository Repository
@@ -17,17 +31,18 @@ namespace SourceGit.ViewModels
             get => _repo;
         }
 
-        public int ActivePageIndex
+        public int ActiveTabIndex
         {
-            get => _rememberActivePageIndex ? _repo.CommitDetailActivePageIndex : _activePageIndex;
+            get => _sharedData.ActiveTabIndex;
             set
             {
-                if (_rememberActivePageIndex)
-                    _repo.CommitDetailActivePageIndex = value;
-                else
-                    _activePageIndex = value;
+                if (value != _sharedData.ActiveTabIndex)
+                {
+                    _sharedData.ActiveTabIndex = value;
 
-                OnPropertyChanged();
+                    if (value == 1 && DiffContext == null && _selectedChanges is { Count: 1 })
+                        DiffContext = new DiffContext(_repo.FullPath, new Models.DiffOption(_commit, _selectedChanges[0]));
+                }
             }
         }
 
@@ -84,7 +99,7 @@ namespace SourceGit.ViewModels
             {
                 if (SetProperty(ref _selectedChanges, value))
                 {
-                    if (value is not { Count: 1 })
+                    if (ActiveTabIndex != 1 || value is not { Count: 1 })
                         DiffContext = null;
                     else
                         DiffContext = new DiffContext(_repo.FullPath, new Models.DiffOption(_commit, value[0]), _diffContext);
@@ -142,10 +157,10 @@ namespace SourceGit.ViewModels
             private set => SetProperty(ref _canOpenRevisionFileWithDefaultEditor, value);
         }
 
-        public CommitDetail(Repository repo, bool rememberActivePageIndex)
+        public CommitDetail(Repository repo, CommitDetailSharedData sharedData)
         {
             _repo = repo;
-            _rememberActivePageIndex = rememberActivePageIndex;
+            _sharedData = sharedData ?? new CommitDetailSharedData();
             WebLinks = Models.CommitLink.Get(repo.Remotes);
         }
 
@@ -224,7 +239,7 @@ namespace SourceGit.ViewModels
         public async Task ResetToThisRevisionAsync(string path)
         {
             var log = _repo.CreateLog($"Reset File to '{_commit.SHA}'");
-            await new Commands.Checkout(_repo.FullPath).Use(log).FileWithRevisionAsync(path, $"{_commit.SHA}");
+            await new Commands.Checkout(_repo.FullPath).Use(log).FileWithRevisionAsync(path, _commit.SHA);
             log.Complete();
         }
 
@@ -236,6 +251,41 @@ namespace SourceGit.ViewModels
                 await new Commands.Checkout(_repo.FullPath).Use(log).FileWithRevisionAsync(change.OriginalPath, $"{_commit.SHA}~1");
 
             await new Commands.Checkout(_repo.FullPath).Use(log).FileWithRevisionAsync(change.Path, $"{_commit.SHA}~1");
+            log.Complete();
+        }
+
+        public async Task ResetMultipleToThisRevisionAsync(List<Models.Change> changes)
+        {
+            var files = new List<string>();
+            foreach (var c in changes)
+                files.Add(c.Path);
+
+            var log = _repo.CreateLog($"Reset Files to '{_commit.SHA}'");
+            await new Commands.Checkout(_repo.FullPath).Use(log).MultipleFilesWithRevisionAsync(files, _commit.SHA);
+            log.Complete();
+        }
+
+        public async Task ResetMultipleToParentRevisionAsync(List<Models.Change> changes)
+        {
+            var renamed = new List<string>();
+            var modified = new List<string>();
+
+            foreach (var c in changes)
+            {
+                if (c.Index == Models.ChangeState.Renamed)
+                    renamed.Add(c.OriginalPath);
+                else
+                    modified.Add(c.Path);
+            }
+
+            var log = _repo.CreateLog($"Reset Files to '{_commit.SHA}~1'");
+
+            if (modified.Count > 0)
+                await new Commands.Checkout(_repo.FullPath).Use(log).MultipleFilesWithRevisionAsync(modified, $"{_commit.SHA}~1");
+
+            if (renamed.Count > 0)
+                await new Commands.Checkout(_repo.FullPath).Use(log).MultipleFilesWithRevisionAsync(renamed, $"{_commit.SHA}~1");
+
             log.Complete();
         }
 
@@ -291,7 +341,7 @@ namespace SourceGit.ViewModels
 
         private void Refresh()
         {
-            _changes = null;
+            _changes = [];
             _requestingRevisionFiles = false;
             _revisionFiles = null;
 
@@ -426,9 +476,6 @@ namespace SourceGit.ViewModels
 
         private void RefreshVisibleChanges()
         {
-            if (_changes == null)
-                return;
-
             if (string.IsNullOrEmpty(_searchChangeFilter))
             {
                 VisibleChanges = _changes;
@@ -572,14 +619,13 @@ namespace SourceGit.ViewModels
         private static partial Regex REG_SHA_FORMAT();
 
         private Repository _repo = null;
-        private bool _rememberActivePageIndex = true;
-        private int _activePageIndex = 0;
+        private CommitDetailSharedData _sharedData = null;
         private Models.Commit _commit = null;
         private Models.CommitFullMessage _fullMessage = null;
         private Models.CommitSignInfo _signInfo = null;
         private List<string> _children = null;
-        private List<Models.Change> _changes = null;
-        private List<Models.Change> _visibleChanges = null;
+        private List<Models.Change> _changes = [];
+        private List<Models.Change> _visibleChanges = [];
         private List<Models.Change> _selectedChanges = null;
         private string _searchChangeFilter = string.Empty;
         private DiffContext _diffContext = null;

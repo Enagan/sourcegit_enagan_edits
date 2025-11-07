@@ -1,11 +1,15 @@
+using System;
 using System.Collections.Generic;
-
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.VisualTree;
+using AvaloniaEdit.Utils;
+using SourceGit.Models;
 
 namespace SourceGit.Views
 {
@@ -121,11 +125,48 @@ namespace SourceGit.Views
                 e.Handled = true;
             }
         }
+        
+        private static async Task<bool> MaybeRunCustomActionOverride(ViewModels.Repository repo, CustomActionOverridesCommand overrideCommandType)
+        {
+            var actions = repo.GetCustomActions(Models.CustomActionScope.Repository);
+            actions.AddRange(repo.GetCustomActions(Models.CustomActionScope.Branch));
+            if (actions.Count > 0)
+            {
+                foreach (var action in actions)
+                {
+                    var (act, _) = action;
+                    if (act.OverridesCoreCommand != overrideCommandType)
+                    {
+                        continue;
+                    }
+
+                    if (act.Scope == Models.CustomActionScope.Branch)
+                    {
+                        await repo.ExecCustomActionAsync(act,  repo.CurrentBranch);
+
+                    }
+                    else // Repository
+                    {
+                        await repo.ExecCustomActionAsync(act, null);
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         private async void Fetch(object sender, TappedEventArgs e)
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Fetch))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+
                 await repo.FetchAsync(e.KeyModifiers is KeyModifiers.Control);
                 e.Handled = true;
             }
@@ -135,6 +176,13 @@ namespace SourceGit.Views
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Fetch))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+                
                 await repo.FetchAsync(true);
                 e.Handled = true;
             }
@@ -144,6 +192,13 @@ namespace SourceGit.Views
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Pull))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+                
                 await repo.PullAsync(e.KeyModifiers is KeyModifiers.Control);
                 e.Handled = true;
             }
@@ -153,6 +208,13 @@ namespace SourceGit.Views
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Pull))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+                
                 await repo.PullAsync(true);
                 e.Handled = true;
             }
@@ -162,6 +224,13 @@ namespace SourceGit.Views
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Push))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+                
                 await repo.PushAsync(e.KeyModifiers is KeyModifiers.Control);
                 e.Handled = true;
             }
@@ -171,6 +240,13 @@ namespace SourceGit.Views
         {
             if (DataContext is ViewModels.Repository repo)
             {
+                if (await MaybeRunCustomActionOverride(repo, CustomActionOverridesCommand.Push))
+                {
+                    // If we successfully override we are good
+                    e.Handled = true;
+                    return;
+                }
+                
                 await repo.PushAsync(true);
                 e.Handled = true;
             }
@@ -396,7 +472,8 @@ namespace SourceGit.Views
                 repo.CanCreatePopup())
             {
                 if (repo.LocalChangesCount > 0)
-                    App.RaiseException(repo.FullPath, "You have un-committed local changes. Please discard or stash them first.");
+                    App.RaiseException(repo.FullPath,
+                        "You have un-committed local changes. Please discard or stash them first.");
                 else if (repo.IsBisectCommandRunning || repo.BisectState != Models.BisectState.None)
                     App.RaiseException(repo.FullPath, "Bisect is running! Please abort it before starting a new one.");
                 else

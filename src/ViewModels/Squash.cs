@@ -26,7 +26,7 @@ namespace SourceGit.ViewModels
 
         public override async Task<bool> Sure()
         {
-            _repo.SetWatcherEnabled(false);
+            using var lockWatcher = _repo.LockWatcher();
             ProgressDescription = "Squashing ...";
 
             var log = _repo.CreateLog("Squash");
@@ -34,6 +34,7 @@ namespace SourceGit.ViewModels
 
             var changes = await new Commands.QueryLocalChanges(_repo.FullPath, false).GetResultAsync();
             var signOff = _repo.Settings.EnableSignOffForCommit;
+            var noVerify = _repo.Settings.NoVerifyOnCommit;
             var needAutoStash = false;
             var succ = false;
 
@@ -54,7 +55,6 @@ namespace SourceGit.ViewModels
                 if (!succ)
                 {
                     log.Complete();
-                    _repo.SetWatcherEnabled(true);
                     return false;
                 }
             }
@@ -64,7 +64,7 @@ namespace SourceGit.ViewModels
                 .ExecAsync();
 
             if (succ)
-                succ = await new Commands.Commit(_repo.FullPath, _message, signOff, true, false)
+                succ = await new Commands.Commit(_repo.FullPath, _message, signOff, noVerify, true, false)
                     .Use(log)
                     .RunAsync();
 
@@ -74,7 +74,6 @@ namespace SourceGit.ViewModels
                     .PopAsync("stash@{0}");
 
             log.Complete();
-            _repo.SetWatcherEnabled(true);
             return succ;
         }
 

@@ -20,6 +20,14 @@ namespace SourceGit.Models
         ComboBox,
     }
 
+    public enum CustomActionOverridesCommand
+    {
+        None = 0,
+        Fetch,
+        Pull,
+        Push
+    }
+
     public class CustomActionControl : ObservableObject
     {
         public CustomActionControlType Type
@@ -96,11 +104,18 @@ namespace SourceGit.Models
             get => _waitForExit;
             set => SetProperty(ref _waitForExit, value);
         }
+        
+        public CustomActionOverridesCommand OverridesCoreCommand
+        {
+            get => _overridesCoreCommand;
+            set => SetProperty(ref _overridesCoreCommand, value);
+        }
 
         private string _name = string.Empty;
         private CustomActionScope _scope = CustomActionScope.Repository;
         private string _executable = string.Empty;
         private string _arguments = string.Empty;
         private bool _waitForExit = true;
+        private CustomActionOverridesCommand _overridesCoreCommand = CustomActionOverridesCommand.None;
     }
 }

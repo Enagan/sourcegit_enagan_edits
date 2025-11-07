@@ -41,7 +41,7 @@
   <x:String x:Key="Text.Avatar.Refetch" xml:space="preserve">更新</x:String>
   <x:String x:Key="Text.BinaryNotSupported" xml:space="preserve">バイナリファイルはサポートされていません!!!</x:String>
   <x:String x:Key="Text.Blame" xml:space="preserve">Blame</x:String>
-  <x:String x:Key="Text.BlameTypeNotSupported" xml:space="preserve">BLAMEではこのファイルはサポートされていません!!!</x:String>
+  <x:String x:Key="Text.Blame.TypeNotSupported" xml:space="preserve">BLAMEではこのファイルはサポートされていません!!!</x:String>
   <x:String x:Key="Text.BranchCM.Checkout" xml:space="preserve">${0}$ をチェックアウトする...</x:String>
   <x:String x:Key="Text.BranchCM.CompareWithWorktree" xml:space="preserve">ワークツリーと比較</x:String>
   <x:String x:Key="Text.BranchCM.CopyName" xml:space="preserve">ブランチ名をコピー</x:String>
@@ -189,7 +189,6 @@
   <x:String x:Key="Text.CreateBranch.LocalChanges.StashAndReply" xml:space="preserve">スタッシュして再適用</x:String>
   <x:String x:Key="Text.CreateBranch.Name" xml:space="preserve">新しいブランチの名前:</x:String>
   <x:String x:Key="Text.CreateBranch.Name.Placeholder" xml:space="preserve">ブランチの名前を入力</x:String>
-  <x:String x:Key="Text.CreateBranch.Name.WarnSpace" xml:space="preserve">スペースはダッシュに置き換えられます。</x:String>
   <x:String x:Key="Text.CreateBranch.Title" xml:space="preserve">ローカルブランチを作成</x:String>
   <x:String x:Key="Text.CreateTag" xml:space="preserve">タグを作成...</x:String>
   <x:String x:Key="Text.CreateTag.BasedOn" xml:space="preserve">付与されるコミット:</x:String>
@@ -436,10 +435,8 @@
   <x:String x:Key="Text.Preferences.Appearance.FontSize.Default" xml:space="preserve">デフォルト</x:String>
   <x:String x:Key="Text.Preferences.Appearance.FontSize.Editor" xml:space="preserve">エディタ</x:String>
   <x:String x:Key="Text.Preferences.Appearance.MonospaceFont" xml:space="preserve">等幅フォント</x:String>
-  <x:String x:Key="Text.Preferences.Appearance.OnlyUseMonoFontInEditor" xml:space="preserve">テキストエディタでは等幅フォントのみを使用する</x:String>
   <x:String x:Key="Text.Preferences.Appearance.Theme" xml:space="preserve">テーマ</x:String>
   <x:String x:Key="Text.Preferences.Appearance.ThemeOverrides" xml:space="preserve">テーマの上書き</x:String>
-  <x:String x:Key="Text.Preferences.Appearance.UseFixedTabWidth" xml:space="preserve">タイトルバーの固定タブ幅を使用</x:String>
   <x:String x:Key="Text.Preferences.Appearance.UseNativeWindowFrame" xml:space="preserve">ネイティブウィンドウフレームを使用</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge" xml:space="preserve">差分/マージ ツール</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Path" xml:space="preserve">インストール パス</x:String>
