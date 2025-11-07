@@ -669,6 +669,14 @@
                       <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Tag}"/>
                       <ComboBoxItem Content="{DynamicResource Text.Configure.CustomAction.Scope.Remote}"/>
                     </ComboBox>
+                    
+                    <TextBlock Margin="0,12,0,0" Text="Core Action Override"/>
+                    <ComboBox Margin="0,4,0,0" Height="28" HorizontalAlignment="Stretch" SelectedIndex="{Binding OverridesCoreCommand, Mode=TwoWay}">
+                      <ComboBoxItem Content="None"/>
+                      <ComboBoxItem Content="Fetch"/>
+                      <ComboBoxItem Content="Pull"/>
+                      <ComboBoxItem Content="Push"/>
+                    </ComboBox>
 
                     <TextBlock Margin="0,12,0,0" Text="{DynamicResource Text.Configure.CustomAction.InputControls}"/>
                     <Button Margin="0,4,0,0" Classes="flat" Height="28" Click="EditCustomActionControls">
