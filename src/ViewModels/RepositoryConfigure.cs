@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Avalonia.Collections;
@@ -75,6 +76,19 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _httpProxy, value);
         }
 
+        public string ConventionalTypesOverride
+        {
+            get => _repo.Settings.ConventionalTypesOverride;
+            set
+            {
+                if (_repo.Settings.ConventionalTypesOverride != value)
+                {
+                    _repo.Settings.ConventionalTypesOverride = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool EnablePruneOnFetch
         {
             get;
@@ -114,8 +128,8 @@ namespace SourceGit.ViewModels
 
         public AvaloniaList<Models.IssueTracker> IssueTrackers
         {
-            get => _repo.IssueTrackers;
-        }
+            get;
+        } = [];
 
         public Models.IssueTracker SelectedIssueTracker
         {
@@ -176,6 +190,17 @@ namespace SourceGit.ViewModels
                 HttpProxy = proxy;
             if (_cached.TryGetValue("fetch.prune", out var prune))
                 EnablePruneOnFetch = (prune == "true");
+
+            foreach (var rule in _repo.IssueTrackers)
+            {
+                IssueTrackers.Add(new()
+                {
+                    IsShared = rule.IsShared,
+                    Name = rule.Name,
+                    RegexString = rule.RegexString,
+                    URLTemplate = rule.URLTemplate,
+                });
+            }
         }
 
         public void ClearHttpProxy()
@@ -208,23 +233,26 @@ namespace SourceGit.ViewModels
             return outs;
         }
 
-        public async Task AddIssueTrackerAsync(string name, string regex, string url)
+        public void AddIssueTracker(string name, string regex, string url)
         {
-            SelectedIssueTracker = await _repo.AddIssueTrackerAsync(name, regex, url);
+            var rule = new Models.IssueTracker()
+            {
+                IsShared = false,
+                Name = name,
+                RegexString = regex,
+                URLTemplate = url,
+            };
+
+            IssueTrackers.Add(rule);
+            SelectedIssueTracker = rule;
         }
 
-        public async Task RemoveIssueTrackerAsync()
+        public void RemoveIssueTracker()
         {
             if (_selectedIssueTracker is { } rule)
-                await _repo.RemoveIssueTrackerAsync(rule);
+                IssueTrackers.Remove(rule);
 
             SelectedIssueTracker = null;
-        }
-
-        public async Task ChangeIssueTrackerShareModeAsync()
-        {
-            if (_selectedIssueTracker is { } rule)
-                await _repo.ChangeIssueTrackerShareModeAsync(rule);
         }
 
         public void AddNewCustomAction()
@@ -259,12 +287,70 @@ namespace SourceGit.ViewModels
             await SetIfChangedAsync("user.signingkey", GPGUserSigningKey, "");
             await SetIfChangedAsync("http.proxy", HttpProxy, "");
             await SetIfChangedAsync("fetch.prune", EnablePruneOnFetch ? "true" : "false", "false");
+
+            await ApplyIssueTrackerChangesAsync();
         }
 
         private async Task SetIfChangedAsync(string key, string value, string defValue)
         {
             if (value != _cached.GetValueOrDefault(key, defValue))
                 await new Commands.Config(_repo.FullPath).SetAsync(key, value);
+        }
+
+        private async Task ApplyIssueTrackerChangesAsync()
+        {
+            var changed = false;
+            var oldRules = new Dictionary<string, Models.IssueTracker>();
+            foreach (var rule in _repo.IssueTrackers)
+                oldRules.Add(rule.Name, rule);
+
+            foreach (var rule in IssueTrackers)
+            {
+                if (oldRules.TryGetValue(rule.Name, out var old))
+                {
+                    if (old.IsShared != rule.IsShared)
+                    {
+                        changed = true;
+                        await new Commands.IssueTracker(_repo.FullPath, old.IsShared).RemoveAsync(old.Name);
+                        await new Commands.IssueTracker(_repo.FullPath, rule.IsShared).AddAsync(rule);
+                    }
+                    else
+                    {
+                        if (!old.RegexString.Equals(rule.RegexString, StringComparison.Ordinal))
+                        {
+                            changed = true;
+                            await new Commands.IssueTracker(_repo.FullPath, old.IsShared).UpdateRegexAsync(rule);
+                        }
+
+                        if (!old.URLTemplate.Equals(rule.URLTemplate, StringComparison.Ordinal))
+                        {
+                            changed = true;
+                            await new Commands.IssueTracker(_repo.FullPath, old.IsShared).UpdateURLTemplateAsync(rule);
+                        }
+                    }
+
+                    oldRules.Remove(rule.Name);
+                }
+                else
+                {
+                    changed = true;
+                    await new Commands.IssueTracker(_repo.FullPath, rule.IsShared).AddAsync(rule);
+                }
+            }
+
+            if (oldRules.Count > 0)
+            {
+                changed = true;
+
+                foreach (var kv in oldRules)
+                    await new Commands.IssueTracker(_repo.FullPath, kv.Value.IsShared).RemoveAsync(kv.Key);
+            }
+
+            if (changed)
+            {
+                _repo.IssueTrackers.Clear();
+                _repo.IssueTrackers.AddRange(IssueTrackers);
+            }
         }
 
         private readonly Repository _repo = null;

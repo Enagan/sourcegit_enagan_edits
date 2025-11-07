@@ -89,6 +89,7 @@ namespace SourceGit.ViewModels
         public Histories(Repository repo)
         {
             _repo = repo;
+            _commitDetailSharedData = new CommitDetailSharedData();
         }
 
         public void Dispose()
@@ -173,7 +174,7 @@ namespace SourceGit.ViewModels
                 }
                 else
                 {
-                    var commitDetail = new CommitDetail(_repo, true);
+                    var commitDetail = new CommitDetail(_repo, _commitDetailSharedData);
                     commitDetail.Commit = commit;
                     DetailContext = commitDetail;
                 }
@@ -219,12 +220,12 @@ namespace SourceGit.ViewModels
                     return false;
 
                 var lb = _repo.Branches.Find(x => x.IsLocal && x.Upstream == rb.FullName);
-                if (lb == null || lb.TrackStatus.Ahead.Count > 0)
+                if (lb == null || lb.Ahead.Count > 0)
                 {
                     if (_repo.CanCreatePopup())
                         _repo.ShowPopup(new CreateBranch(_repo, rb));
                 }
-                else if (lb.TrackStatus.Behind.Count > 0)
+                else if (lb.Behind.Count > 0)
                 {
                     if (_repo.CanCreatePopup())
                         _repo.ShowPopup(new CheckoutAndFastForward(_repo, lb, rb));
@@ -265,7 +266,7 @@ namespace SourceGit.ViewModels
                         continue;
 
                     var lb = _repo.Branches.Find(x => x.IsLocal && x.Upstream == rb.FullName);
-                    if (lb is { TrackStatus.Ahead.Count: 0 })
+                    if (lb != null && lb.Behind.Count > 0 && lb.Ahead.Count == 0)
                     {
                         if (_repo.CanCreatePopup())
                             _repo.ShowPopup(new CheckoutAndFastForward(_repo, lb, rb));
@@ -331,6 +332,16 @@ namespace SourceGit.ViewModels
             }
         }
 
+        public async Task DropHeadAsync(Models.Commit head)
+        {
+            var parent = _commits.Find(x => x.SHA.Equals(head.Parents[0]));
+            if (parent == null)
+                parent = await new Commands.QuerySingleCommit(_repo.FullPath, head.Parents[0]).GetResultAsync();
+
+            if (parent != null && _repo.CanCreatePopup())
+                _repo.ShowPopup(new DropHead(_repo, head, parent));
+        }
+
         public async Task InteractiveRebaseAsync(Models.Commit commit, Models.InteractiveRebaseAction act)
         {
             var prefill = new InteractiveRebasePrefill(commit.SHA, act);
@@ -347,10 +358,11 @@ namespace SourceGit.ViewModels
                 await App.ShowDialog(new InteractiveRebase(_repo, on, prefill));
         }
 
-        public async Task CopyCommitFullMessageAsync(Models.Commit commit)
+        public async Task<string> GetCommitFullMessageAsync(Models.Commit commit)
         {
-            var message = await new Commands.QueryCommitFullMessage(_repo.FullPath, commit.SHA).GetResultAsync();
-            await App.CopyTextAsync(message);
+            return await new Commands.QueryCommitFullMessage(_repo.FullPath, commit.SHA)
+                .GetResultAsync()
+                .ConfigureAwait(false);
         }
 
         public async Task<Models.Commit> CompareWithHeadAsync(Models.Commit commit)
@@ -392,7 +404,7 @@ namespace SourceGit.ViewModels
                 }
                 else
                 {
-                    var commitDetail = new CommitDetail(_repo, true);
+                    var commitDetail = new CommitDetail(_repo, _commitDetailSharedData);
                     commitDetail.Commit = commit;
                     DetailContext = commitDetail;
                 }
@@ -400,6 +412,7 @@ namespace SourceGit.ViewModels
         }
 
         private Repository _repo = null;
+        private CommitDetailSharedData _commitDetailSharedData = null;
         private bool _isLoading = true;
         private List<Models.Commit> _commits = new List<Models.Commit>();
         private Models.CommitGraph _graph = null;

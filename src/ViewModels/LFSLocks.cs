@@ -10,9 +10,9 @@ namespace SourceGit.ViewModels
     {
         public bool HasValidUserName
         {
-            get;
-            private set;
-        } = false;
+            get => _hasValidUsername;
+            private set => SetProperty(ref _hasValidUsername, value);
+        }
 
         public bool IsLoading
         {
@@ -62,7 +62,7 @@ namespace SourceGit.ViewModels
 
             IsLoading = true;
 
-            var succ = await _repo.UnlockLFSFileAsync(_remote, lfsLock.File, force, false);
+            var succ = await _repo.UnlockLFSFileAsync(_remote, lfsLock.Path, force, false);
             if (succ)
             {
                 _cachedLocks.Remove(lfsLock);
@@ -84,7 +84,7 @@ namespace SourceGit.ViewModels
             {
                 foreach (var lfsLock in _cachedLocks)
                 {
-                    if (lfsLock.User.Equals(_userName, StringComparison.Ordinal))
+                    if (lfsLock.Owner.Name.Equals(_userName, StringComparison.Ordinal))
                         visible.Add(lfsLock);
                 }
             }
@@ -99,5 +99,6 @@ namespace SourceGit.ViewModels
         private List<Models.LFSLock> _visibleLocks = [];
         private bool _showOnlyMyLocks = false;
         private string _userName;
+        private bool _hasValidUsername;
     }
 }

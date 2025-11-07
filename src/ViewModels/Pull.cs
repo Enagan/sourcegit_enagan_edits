@@ -113,13 +113,13 @@ namespace SourceGit.ViewModels
 
         public override async Task<bool> Sure()
         {
-            _repo.SetWatcherEnabled(false);
+            using var lockWatcher = _repo.LockWatcher();
 
             var log = _repo.CreateLog("Pull");
             Use(log);
 
             var updateSubmodules = IsRecurseSubmoduleVisible && RecurseSubmodules;
-            var changes = await new Commands.CountLocalChangesWithoutUntracked(_repo.FullPath).GetResultAsync();
+            var changes = await new Commands.CountLocalChanges(_repo.FullPath, false).GetResultAsync();
             var needPopStash = false;
             if (changes > 0)
             {
@@ -133,7 +133,6 @@ namespace SourceGit.ViewModels
                     if (!succ)
                     {
                         log.Complete();
-                        _repo.SetWatcherEnabled(true);
                         return false;
                     }
 
@@ -161,9 +160,12 @@ namespace SourceGit.ViewModels
 
             log.Complete();
 
-            var head = await new Commands.QueryRevisionByRefName(_repo.FullPath, "HEAD").GetResultAsync();
-            _repo.NavigateToCommit(head, true);
-            _repo.SetWatcherEnabled(true);
+            if (_repo.SelectedViewIndex == 0)
+            {
+                var head = await new Commands.QueryRevisionByRefName(_repo.FullPath, "HEAD").GetResultAsync();
+                _repo.NavigateToCommit(head, true);
+            }
+
             return rs;
         }
 

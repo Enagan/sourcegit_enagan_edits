@@ -15,6 +15,11 @@ namespace SourceGit.ViewModels
 
     public class InteractiveRebaseItem : ObservableObject
     {
+        public int OriginalOrder
+        {
+            get;
+        }
+
         public Models.Commit Commit
         {
             get;
@@ -59,8 +64,21 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public InteractiveRebaseItem(Models.Commit c, string message, bool canSquashOrFixup)
+        public bool IsDropBeforeVisible
         {
+            get => _isDropBeforeVisible;
+            set => SetProperty(ref _isDropBeforeVisible, value);
+        }
+
+        public bool IsDropAfterVisible
+        {
+            get => _isDropAfterVisible;
+            set => SetProperty(ref _isDropAfterVisible, value);
+        }
+
+        public InteractiveRebaseItem(int order, Models.Commit c, string message, bool canSquashOrFixup)
+        {
+            OriginalOrder = order;
             Commit = c;
             FullMessage = message;
             CanSquashOrFixup = canSquashOrFixup;
@@ -70,6 +88,8 @@ namespace SourceGit.ViewModels
         private string _subject;
         private string _fullMessage;
         private bool _canSquashOrFixup = true;
+        private bool _isDropBeforeVisible = false;
+        private bool _isDropAfterVisible = false;
     }
 
     public class InteractiveRebase : ObservableObject
@@ -96,6 +116,11 @@ namespace SourceGit.ViewModels
             get => _repo.IssueTrackers;
         }
 
+        public string ConventionalTypesOverride
+        {
+            get => _repo.Settings.ConventionalTypesOverride;
+        }
+
         public bool IsLoading
         {
             get => _isLoading;
@@ -107,28 +132,25 @@ namespace SourceGit.ViewModels
             get;
         } = [];
 
-        public InteractiveRebaseItem SelectedItem
+        public InteractiveRebaseItem PreSelected
         {
-            get => _selectedItem;
-            set
-            {
-                if (SetProperty(ref _selectedItem, value))
-                    DetailContext.Commit = value?.Commit;
-            }
+            get => _preSelected;
+            private set => SetProperty(ref _preSelected, value);
         }
 
-        public CommitDetail DetailContext
+        public object Detail
         {
-            get;
+            get => _detail;
+            private set => SetProperty(ref _detail, value);
         }
 
         public InteractiveRebase(Repository repo, Models.Commit on, InteractiveRebasePrefill prefill = null)
         {
             _repo = repo;
+            _commitDetail = new CommitDetail(repo, null);
             Current = repo.CurrentBranch;
             On = on;
             IsLoading = true;
-            DetailContext = new CommitDetail(repo, false);
 
             Task.Run(async () =>
             {
@@ -140,7 +162,7 @@ namespace SourceGit.ViewModels
                 for (var i = 0; i < commits.Count; i++)
                 {
                     var c = commits[i];
-                    list.Add(new InteractiveRebaseItem(c.Commit, c.Message, i < commits.Count - 1));
+                    list.Add(new InteractiveRebaseItem(commits.Count - i, c.Commit, c.Message, i < commits.Count - 1));
                 }
 
                 var selected = list.Count > 0 ? list[0] : null;
@@ -157,53 +179,86 @@ namespace SourceGit.ViewModels
                 Dispatcher.UIThread.Post(() =>
                 {
                     Items.AddRange(list);
-                    SelectedItem = selected;
+                    PreSelected = selected;
                     IsLoading = false;
                 });
             });
         }
 
-        public void MoveItemUp(InteractiveRebaseItem item)
+        public void SelectCommits(List<InteractiveRebaseItem> items)
         {
-            var idx = Items.IndexOf(item);
-            if (idx > 0)
+            if (items.Count == 0)
             {
-                var prev = Items[idx - 1];
-                Items.RemoveAt(idx - 1);
-                Items.Insert(idx, prev);
-                SelectedItem = item;
-                UpdateItems();
+                Detail = null;
+            }
+            else if (items.Count == 1)
+            {
+                _commitDetail.Commit = items[0].Commit;
+                Detail = _commitDetail;
+            }
+            else
+            {
+                Detail = new Models.Count(items.Count);
             }
         }
 
-        public void MoveItemDown(InteractiveRebaseItem item)
+        public void ChangeAction(List<InteractiveRebaseItem> selected, Models.InteractiveRebaseAction action)
         {
-            var idx = Items.IndexOf(item);
-            if (idx < Items.Count - 1)
+            if (action == Models.InteractiveRebaseAction.Squash || action == Models.InteractiveRebaseAction.Fixup)
             {
-                var next = Items[idx + 1];
-                Items.RemoveAt(idx + 1);
-                Items.Insert(idx, next);
-                SelectedItem = item;
-                UpdateItems();
+                foreach (var item in selected)
+                {
+                    if (item.CanSquashOrFixup)
+                        item.Action = action;
+                }
             }
+            else
+            {
+                foreach (var item in selected)
+                    item.Action = action;
+            }
+
+            UpdateItems();
         }
 
-        public void ChangeAction(InteractiveRebaseItem item, Models.InteractiveRebaseAction action)
+        public void Move(List<InteractiveRebaseItem> commits, int index)
         {
-            if (!item.CanSquashOrFixup)
+            var hashes = new HashSet<string>();
+            foreach (var c in commits)
+                hashes.Add(c.Commit.SHA);
+
+            var before = new List<InteractiveRebaseItem>();
+            var ordered = new List<InteractiveRebaseItem>();
+            var after = new List<InteractiveRebaseItem>();
+
+            for (int i = 0; i < index; i++)
             {
-                if (action == Models.InteractiveRebaseAction.Squash || action == Models.InteractiveRebaseAction.Fixup)
-                    return;
+                var item = Items[i];
+                if (!hashes.Contains(item.Commit.SHA))
+                    before.Add(item);
+                else
+                    ordered.Add(item);
             }
 
-            item.Action = action;
+            for (int i = index; i < Items.Count; i++)
+            {
+                var item = Items[i];
+                if (!hashes.Contains(item.Commit.SHA))
+                    after.Add(item);
+                else
+                    ordered.Add(item);
+            }
+
+            Items.Clear();
+            Items.AddRange(before);
+            Items.AddRange(ordered);
+            Items.AddRange(after);
             UpdateItems();
         }
 
         public async Task<bool> Start()
         {
-            _repo.SetWatcherEnabled(false);
+            using var lockWatcher = _repo.LockWatcher();
 
             var saveFile = Path.Combine(_repo.GitDir, "sourcegit.interactive_rebase");
             var collection = new Models.InteractiveRebaseJobCollection();
@@ -230,7 +285,6 @@ namespace SourceGit.ViewModels
                 .ExecAsync();
 
             log.Complete();
-            _repo.SetWatcherEnabled(true);
             return succ;
         }
 
@@ -257,6 +311,8 @@ namespace SourceGit.ViewModels
 
         private Repository _repo = null;
         private bool _isLoading = false;
-        private InteractiveRebaseItem _selectedItem = null;
+        private InteractiveRebaseItem _preSelected = null;
+        private object _detail = null;
+        private CommitDetail _commitDetail = null;
     }
 }

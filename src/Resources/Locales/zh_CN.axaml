@@ -5,6 +5,7 @@
 
   <x:String x:Key="Text.About" xml:space="preserve">关于软件</x:String>
   <x:String x:Key="Text.About.Menu" xml:space="preserve">关于本软件</x:String>
+  <x:String x:Key="Text.About.ReleaseNotes" xml:space="preserve">浏览版本更新说明</x:String>
   <x:String x:Key="Text.About.SubTitle" xml:space="preserve">开源免费的Git客户端</x:String>
   <x:String x:Key="Text.AddToIgnore" xml:space="preserve">新增忽略文件</x:String>
   <x:String x:Key="Text.AddToIgnore.Pattern" xml:space="preserve">匹配模式 ：</x:String>
@@ -55,11 +56,14 @@
   <x:String x:Key="Text.Bisect.Skip">无法判定</x:String>
   <x:String x:Key="Text.Bisect.WaitingForRange">二分定位进行中。请标记当前的提交是 '正确' 还是 '错误'，然后检出另一个提交。</x:String>
   <x:String x:Key="Text.Blame" xml:space="preserve">逐行追溯(blame)</x:String>
-  <x:String x:Key="Text.BlameTypeNotSupported" xml:space="preserve">选中文件不支持该操作!!!</x:String>
+  <x:String x:Key="Text.Blame.BlameOnPreviousRevision" xml:space="preserve">对当前版本的前一版本执行逐行追溯操作</x:String>
+  <x:String x:Key="Text.Blame.TypeNotSupported" xml:space="preserve">选中文件不支持该操作!!!</x:String>
   <x:String x:Key="Text.BranchCM.Checkout" xml:space="preserve">检出(checkout) ${0}$...</x:String>
   <x:String x:Key="Text.BranchCM.CompareWithCurrent" xml:space="preserve">与当前 ${0}$ 比较</x:String>
   <x:String x:Key="Text.BranchCM.CompareWithWorktree" xml:space="preserve">与本地工作树比较</x:String>
   <x:String x:Key="Text.BranchCM.CopyName" xml:space="preserve">复制分支名</x:String>
+  <x:String x:Key="Text.BranchCM.CreatePR" xml:space="preserve">创建合并请求 ...</x:String>
+  <x:String x:Key="Text.BranchCM.CreatePRForUpstream" xml:space="preserve">为上游分支 ${0}$ 创建合并请求 ...</x:String>
   <x:String x:Key="Text.BranchCM.CustomAction" xml:space="preserve">自定义操作</x:String>
   <x:String x:Key="Text.BranchCM.Delete" xml:space="preserve">删除 ${0}$...</x:String>
   <x:String x:Key="Text.BranchCM.DeleteMultiBranches" xml:space="preserve">删除选中的 {0} 个分支</x:String>
@@ -74,12 +78,18 @@
   <x:String x:Key="Text.BranchCM.Rebase" xml:space="preserve">变基(rebase) ${0}$ 至 ${1}$...</x:String>
   <x:String x:Key="Text.BranchCM.Rename" xml:space="preserve">重命名 ${0}$...</x:String>
   <x:String x:Key="Text.BranchCM.ResetToSelectedCommit" xml:space="preserve">重置 ${0}$ 到 ${1}$...</x:String>
+  <x:String x:Key="Text.BranchCM.SwitchToWorktree" xml:space="preserve">切换到 ${0}$ (工作树)</x:String>
   <x:String x:Key="Text.BranchCM.Tracking" xml:space="preserve">切换上游分支 ...</x:String>
   <x:String x:Key="Text.BranchCompare" xml:space="preserve">分支比较</x:String>
+  <x:String x:Key="Text.BranchTree.Ahead" xml:space="preserve">领先 {0} 个提交</x:String>
+  <x:String x:Key="Text.BranchTree.AheadBehind" xml:space="preserve">领先 {0} 个提交，落后 {1} 个提交</x:String>
+  <x:String x:Key="Text.BranchTree.Behind" xml:space="preserve">落后 {0} 个提交</x:String>
   <x:String x:Key="Text.BranchTree.InvalidUpstream" xml:space="preserve">不存在</x:String>
   <x:String x:Key="Text.BranchTree.Remote" xml:space="preserve">远程</x:String>
+  <x:String x:Key="Text.BranchTree.Status" xml:space="preserve">状态</x:String>
   <x:String x:Key="Text.BranchTree.Tracking" xml:space="preserve">上游分支</x:String>
   <x:String x:Key="Text.BranchTree.URL" xml:space="preserve">远程地址</x:String>
+  <x:String x:Key="Text.BranchTree.Worktree" xml:space="preserve">工作树</x:String>
   <x:String x:Key="Text.Cancel" xml:space="preserve">取    消</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutFirstParentRevision" xml:space="preserve">重置文件到上一版本</x:String>
   <x:String x:Key="Text.ChangeCM.CheckoutThisRevision" xml:space="preserve">重置文件到该版本</x:String>
@@ -132,6 +142,7 @@
   <x:String x:Key="Text.CommitCM.CopySHA" xml:space="preserve">提交指纹</x:String>
   <x:String x:Key="Text.CommitCM.CopySubject" xml:space="preserve">主题</x:String>
   <x:String x:Key="Text.CommitCM.CustomAction" xml:space="preserve">自定义操作</x:String>
+  <x:String x:Key="Text.CommitCM.Drop" xml:space="preserve">丢弃此提交</x:String>
   <x:String x:Key="Text.CommitCM.InteractiveRebase" xml:space="preserve">交互式变基(rebase -i)</x:String>
   <x:String x:Key="Text.CommitCM.InteractiveRebase.Drop" xml:space="preserve">丢弃...</x:String>
   <x:String x:Key="Text.CommitCM.InteractiveRebase.Edit" xml:space="preserve">编辑...</x:String>
@@ -161,6 +172,9 @@
   <x:String x:Key="Text.CommitDetail.Info.Committer" xml:space="preserve">提交者</x:String>
   <x:String x:Key="Text.CommitDetail.Info.ContainsIn" xml:space="preserve">查看包含此提交的分支/标签</x:String>
   <x:String x:Key="Text.CommitDetail.Info.ContainsIn.Title" xml:space="preserve">本提交已被以下分支/标签包含</x:String>
+  <x:String x:Key="Text.CommitDetail.Info.CopyEmail" xml:space="preserve">复制电子邮箱</x:String>
+  <x:String x:Key="Text.CommitDetail.Info.CopyName" xml:space="preserve">复制用户名</x:String>
+  <x:String x:Key="Text.CommitDetail.Info.CopyNameAndEmail" xml:space="preserve">复制用户名及邮箱</x:String>
   <x:String x:Key="Text.CommitDetail.Info.GotoChangesPage" xml:space="preserve">仅显示前100项变更。请前往【变更对比】页面查看全部。</x:String>
   <x:String x:Key="Text.CommitDetail.Info.Key" xml:space="preserve">签名密钥 ：</x:String>
   <x:String x:Key="Text.CommitDetail.Info.Message" xml:space="preserve">提交信息</x:String>
@@ -170,11 +184,19 @@
   <x:String x:Key="Text.CommitDetail.Info.Signer" xml:space="preserve">签名者 ：</x:String>
   <x:String x:Key="Text.CommitDetail.Info.WebLinks" xml:space="preserve">浏览器中查看</x:String>
   <x:String x:Key="Text.CommitMessageTextBox.MessagePlaceholder" xml:space="preserve">详细描述</x:String>
+  <x:String x:Key="Text.CommitMessageTextBox.PasteAndReplaceAll" xml:space="preserve">粘贴（替换全部）</x:String>
   <x:String x:Key="Text.CommitMessageTextBox.SubjectCount" xml:space="preserve">主题</x:String>
   <x:String x:Key="Text.CommitMessageTextBox.SubjectPlaceholder" xml:space="preserve">填写提交信息主题</x:String>
   <x:String x:Key="Text.Configure" xml:space="preserve">仓库配置</x:String>
   <x:String x:Key="Text.Configure.CommitMessageTemplate" xml:space="preserve">提交信息模板</x:String>
-  <x:String x:Key="Text.Configure.CommitMessageTemplate.BuiltinVars" xml:space="preserve">您可使用 ${files_num}, ${branch_name}, ${files} 或 ${files:N}（N表示最大显示的文件数）</x:String>
+  <x:String x:Key="Text.Configure.CommitMessageTemplate.BuiltinVars" xml:space="preserve">内置变量：
+  
+  ${branch_name} 当前分支名
+  ${files_num} 变更文件数量
+  ${files} 变更文件路径列表
+  ${files:N} 变更文件路径列表（仅输出指定 N 条）
+  ${pure_files} 与 ${files} 类似，但仅输出文件名
+  ${pure_files:N} 与 ${files:N} 类似，但仅输出文件名</x:String>
   <x:String x:Key="Text.Configure.CommitMessageTemplate.Content" xml:space="preserve">模板内容 ：</x:String>
   <x:String x:Key="Text.Configure.CommitMessageTemplate.Name" xml:space="preserve">模板名 ：</x:String>
   <x:String x:Key="Text.Configure.CustomAction" xml:space="preserve">自定义操作</x:String>
@@ -204,6 +226,7 @@
   <x:String x:Key="Text.Configure.Git" xml:space="preserve">GIT配置</x:String>
   <x:String x:Key="Text.Configure.Git.AutoFetch" xml:space="preserve">启用定时自动拉取远程更新</x:String>
   <x:String x:Key="Text.Configure.Git.AutoFetchIntervalSuffix" xml:space="preserve">分钟</x:String>
+  <x:String x:Key="Text.Configure.Git.ConventionalTypesOverride" xml:space="preserve">自定义规范化提交类型</x:String>
   <x:String x:Key="Text.Configure.Git.DefaultRemote" xml:space="preserve">默认远程</x:String>
   <x:String x:Key="Text.Configure.Git.PreferredMergeMode" xml:space="preserve">默认合并方式</x:String>
   <x:String x:Key="Text.Configure.IssueTracker" xml:space="preserve">ISSUE追踪</x:String>
@@ -237,6 +260,7 @@
   <x:String x:Key="Text.ConfigureCustomActionControls.Label" xml:space="preserve">名称 ：</x:String>
   <x:String x:Key="Text.ConfigureCustomActionControls.Options" xml:space="preserve">选项列表 ：</x:String>
   <x:String x:Key="Text.ConfigureCustomActionControls.Options.Tip" xml:space="preserve">选项之间请使用英文 '|' 作为分隔符</x:String>
+  <x:String x:Key="Text.ConfigureCustomActionControls.StringValue.Tip" xml:space="preserve">内置变量 ${REPO}, ${REMOTE}, ${BRANCH}, ${BRANCH_FRIENDLY_NAME}, ${SHA} 与 ${TAG} 在这里仍然可用</x:String>
   <x:String x:Key="Text.ConfigureCustomActionControls.Type" xml:space="preserve">类型 ：</x:String>
   <x:String x:Key="Text.ConfigureWorkspace" xml:space="preserve">工作区</x:String>
   <x:String x:Key="Text.ConfigureWorkspace.Color" xml:space="preserve">颜色</x:String>
@@ -267,7 +291,6 @@
   <x:String x:Key="Text.CreateBranch.LocalChanges.StashAndReply" xml:space="preserve">贮藏并自动恢复</x:String>
   <x:String x:Key="Text.CreateBranch.Name" xml:space="preserve">新分支名 ：</x:String>
   <x:String x:Key="Text.CreateBranch.Name.Placeholder" xml:space="preserve">填写分支名称。</x:String>
-  <x:String x:Key="Text.CreateBranch.Name.WarnSpace" xml:space="preserve">空格将被替换为'-'符号</x:String>
   <x:String x:Key="Text.CreateBranch.Title" xml:space="preserve">创建本地分支</x:String>
   <x:String x:Key="Text.CreateBranch.OverwriteExisting" xml:space="preserve">允许重置已存在的分支</x:String>
   <x:String x:Key="Text.CreateTag" xml:space="preserve">新建标签 ...</x:String>
@@ -314,6 +337,7 @@
   <x:String x:Key="Text.Diff.First" xml:space="preserve">首个差异</x:String>
   <x:String x:Key="Text.Diff.IgnoreWhitespace" xml:space="preserve">忽略空白符号变化</x:String>
   <x:String x:Key="Text.Diff.Image.Blend" xml:space="preserve">混合对比</x:String>
+  <x:String x:Key="Text.Diff.Image.Difference" xml:space="preserve">差异比较</x:String>
   <x:String x:Key="Text.Diff.Image.SideBySide" xml:space="preserve">分列对比</x:String>
   <x:String x:Key="Text.Diff.Image.Swipe" xml:space="preserve">填充对比</x:String>
   <x:String x:Key="Text.Diff.Last" xml:space="preserve">最后一个差异</x:String>
@@ -338,6 +362,9 @@
   <x:String x:Key="Text.Diff.VisualLines.Incr" xml:space="preserve">增加可见的行数</x:String>
   <x:String x:Key="Text.Diff.Welcome" xml:space="preserve">请选择需要对比的文件</x:String>
   <x:String x:Key="Text.DirHistories" xml:space="preserve">目录内容变更历史</x:String>
+  <x:String x:Key="Text.DirtyState.HasLocalChanges" xml:space="preserve">未提交的本地变更</x:String>
+  <x:String x:Key="Text.DirtyState.HasPendingPullOrPush" xml:space="preserve">当前分支HEAD与远端不一致</x:String>
+  <x:String x:Key="Text.DirtyState.UpToDate" xml:space="preserve">已是最新</x:String>
   <x:String x:Key="Text.Discard" xml:space="preserve">放弃更改确认</x:String>
   <x:String x:Key="Text.Discard.All" xml:space="preserve">所有本仓库未提交的修改。</x:String>
   <x:String x:Key="Text.Discard.Changes" xml:space="preserve">变更 ：</x:String>
@@ -345,6 +372,9 @@
   <x:String x:Key="Text.Discard.IncludeUntracked" xml:space="preserve">包括未跟踪的文件</x:String>
   <x:String x:Key="Text.Discard.Total" xml:space="preserve">总计{0}项选中更改</x:String>
   <x:String x:Key="Text.Discard.Warning" xml:space="preserve">本操作不支持回退，请确认后继续！！！</x:String>
+  <x:String x:Key="Text.DropHead" xml:space="preserve">丢弃提交</x:String>
+  <x:String x:Key="Text.DropHead.Commit" xml:space="preserve">提交 ：</x:String>
+  <x:String x:Key="Text.DropHead.NewHead" xml:space="preserve">丢弃后 HEAD ：</x:String>
   <x:String x:Key="Text.EditRepositoryNode.Bookmark" xml:space="preserve">书签 ：</x:String>
   <x:String x:Key="Text.EditRepositoryNode.Name" xml:space="preserve">名称 ：</x:String>
   <x:String x:Key="Text.EditRepositoryNode.Target" xml:space="preserve">目标 ：</x:String>
@@ -444,7 +474,6 @@
   <x:String x:Key="Text.Hotkeys.Global.GotoPrevTab" xml:space="preserve">切换到上一个页面</x:String>
   <x:String x:Key="Text.Hotkeys.Global.NewTab" xml:space="preserve">新建页面</x:String>
   <x:String x:Key="Text.Hotkeys.Global.OpenPreferences" xml:space="preserve">打开偏好设置面板</x:String>
-  <x:String x:Key="Text.Hotkeys.Global.SwitchWorkspace" xml:space="preserve">切换工作区</x:String>
   <x:String x:Key="Text.Hotkeys.Global.SwitchTab" xml:space="preserve">切换显示页面</x:String>
   <x:String x:Key="Text.Hotkeys.Repo" xml:space="preserve">仓库页面快捷键</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.Commit" xml:space="preserve">提交暂存区更改</x:String>
@@ -487,8 +516,9 @@
   <x:String x:Key="Text.IssueLinkCM.OpenInBrowser" xml:space="preserve">在浏览器中访问</x:String>
   <x:String x:Key="Text.Launcher.Error" xml:space="preserve">出错了</x:String>
   <x:String x:Key="Text.Launcher.Info" xml:space="preserve">系统提示</x:String>
-  <x:String x:Key="Text.Launcher.Workspaces" xml:space="preserve">工作区列表</x:String>
+  <x:String x:Key="Text.Launcher.OpenRepository" xml:space="preserve">打开其他仓库</x:String>
   <x:String x:Key="Text.Launcher.Pages" xml:space="preserve">页面列表</x:String>
+  <x:String x:Key="Text.Launcher.Workspaces" xml:space="preserve">工作区列表</x:String>
   <x:String x:Key="Text.Merge" xml:space="preserve">合并分支</x:String>
   <x:String x:Key="Text.Merge.Edit" xml:space="preserve">编辑合并信息</x:String>
   <x:String x:Key="Text.Merge.Into" xml:space="preserve">目标分支 ：</x:String>
@@ -534,6 +564,7 @@
   <x:String x:Key="Text.Preferences.AI.GenerateSubjectPrompt" xml:space="preserve">Generate Subject Prompt</x:String>
   <x:String x:Key="Text.Preferences.AI.Model" xml:space="preserve">模型</x:String>
   <x:String x:Key="Text.Preferences.AI.Name" xml:space="preserve">配置名称</x:String>
+  <x:String x:Key="Text.Preferences.AI.ReadApiKeyFromEnv" xml:space="preserve">从环境变量（填写环境变量名）中读取API密钥</x:String>
   <x:String x:Key="Text.Preferences.AI.Server" xml:space="preserve">服务地址</x:String>
   <x:String x:Key="Text.Preferences.AI.Streaming" xml:space="preserve">启用流式输出</x:String>
   <x:String x:Key="Text.Preferences.Appearance" xml:space="preserve">外观配置</x:String>
@@ -543,10 +574,9 @@
   <x:String x:Key="Text.Preferences.Appearance.FontSize.Default" xml:space="preserve">默认</x:String>
   <x:String x:Key="Text.Preferences.Appearance.FontSize.Editor" xml:space="preserve">代码编辑器</x:String>
   <x:String x:Key="Text.Preferences.Appearance.MonospaceFont" xml:space="preserve">等宽字体</x:String>
-  <x:String x:Key="Text.Preferences.Appearance.OnlyUseMonoFontInEditor" xml:space="preserve">仅在文本编辑器中使用等宽字体</x:String>
   <x:String x:Key="Text.Preferences.Appearance.Theme" xml:space="preserve">主题</x:String>
   <x:String x:Key="Text.Preferences.Appearance.ThemeOverrides" xml:space="preserve">主题自定义</x:String>
-  <x:String x:Key="Text.Preferences.Appearance.UseFixedTabWidth" xml:space="preserve">主标签使用固定宽度</x:String>
+  <x:String x:Key="Text.Preferences.Appearance.UseAutoHideScrollBars" xml:space="preserve">允许滚动条自动隐藏</x:String>
   <x:String x:Key="Text.Preferences.Appearance.UseNativeWindowFrame" xml:space="preserve">使用系统默认窗体样式</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge" xml:space="preserve">对比/合并工具</x:String>
   <x:String x:Key="Text.Preferences.DiffMerge.Path" xml:space="preserve">安装路径</x:String>
@@ -560,9 +590,11 @@
   <x:String x:Key="Text.Preferences.General.MaxHistoryCommits" xml:space="preserve">最大历史提交数</x:String>
   <x:String x:Key="Text.Preferences.General.ShowAuthorTime" xml:space="preserve">在提交路线图中显示修改时间而非提交时间</x:String>
   <x:String x:Key="Text.Preferences.General.ShowChangesPageByDefault" xml:space="preserve">默认显示【本地更改】页</x:String>
+  <x:String x:Key="Text.Preferences.General.ShowChangesTabInCommitDetailByDefault" xml:space="preserve">在提交详情页默认打开【变更对比】标签页</x:String>
   <x:String x:Key="Text.Preferences.General.ShowChildren" xml:space="preserve">在提交详情页中显示子提交列表</x:String>
   <x:String x:Key="Text.Preferences.General.ShowTagsInGraph" xml:space="preserve">在提交路线图中显示标签</x:String>
   <x:String x:Key="Text.Preferences.General.SubjectGuideLength" xml:space="preserve">SUBJECT字数检测</x:String>
+  <x:String x:Key="Text.Preferences.General.UseGitHubStyleAvatar" xml:space="preserve">生成GitHub风格的默认头像</x:String>
   <x:String x:Key="Text.Preferences.Git" xml:space="preserve">GIT配置</x:String>
   <x:String x:Key="Text.Preferences.Git.CRLF" xml:space="preserve">自动换行转换</x:String>
   <x:String x:Key="Text.Preferences.Git.DefaultCloneDir" xml:space="preserve">默认克隆路径</x:String>
@@ -619,6 +651,8 @@
   <x:String x:Key="Text.PushTag.PushAllRemotes" xml:space="preserve">推送到所有远程仓库</x:String>
   <x:String x:Key="Text.PushTag.Remote" xml:space="preserve">远程仓库 ：</x:String>
   <x:String x:Key="Text.PushTag.Tag" xml:space="preserve">标签 ：</x:String>
+  <x:String x:Key="Text.PushToNewBranch" xml:space="preserve">推送到新的分支</x:String>
+  <x:String x:Key="Text.PushToNewBranch.Title" xml:space="preserve">输入新的远端分支名</x:String>
   <x:String x:Key="Text.Quit" xml:space="preserve">退出</x:String>
   <x:String x:Key="Text.Rebase" xml:space="preserve">变基(rebase)操作</x:String>
   <x:String x:Key="Text.Rebase.AutoStash" xml:space="preserve">自动贮藏并恢复本地变更</x:String>
@@ -730,6 +764,7 @@
   <x:String x:Key="Text.SaveAsPatchSuccess" xml:space="preserve">补丁已成功保存！</x:String>
   <x:String x:Key="Text.ScanRepositories" xml:space="preserve">扫描仓库</x:String>
   <x:String x:Key="Text.ScanRepositories.RootDir" xml:space="preserve">根路径 ：</x:String>
+  <x:String x:Key="Text.ScanRepositories.UseCustomDir" xml:space="preserve">扫描其他自定义路径</x:String>
   <x:String x:Key="Text.SelfUpdate" xml:space="preserve">检测更新...</x:String>
   <x:String x:Key="Text.SelfUpdate.Available" xml:space="preserve">检测到软件有版本更新: </x:String>
   <x:String x:Key="Text.SelfUpdate.Error" xml:space="preserve">获取最新版本信息失败！</x:String>
@@ -862,6 +897,7 @@
   <x:String x:Key="Text.WorkingCopy.IncludeUntracked" xml:space="preserve">显示未跟踪文件</x:String>
   <x:String x:Key="Text.WorkingCopy.NoCommitHistories" xml:space="preserve">没有提交信息记录</x:String>
   <x:String x:Key="Text.WorkingCopy.NoCommitTemplates" xml:space="preserve">没有可应用的提交信息模板</x:String>
+  <x:String x:Key="Text.WorkingCopy.NoVerify" xml:space="preserve">跳过GIT钩子</x:String>
   <x:String x:Key="Text.WorkingCopy.ResetAuthor" xml:space="preserve">重置提交者</x:String>
   <x:String x:Key="Text.WorkingCopy.SignOff" xml:space="preserve">署名</x:String>
   <x:String x:Key="Text.WorkingCopy.Staged" xml:space="preserve">已暂存</x:String>
@@ -877,6 +913,7 @@
   <x:String x:Key="Text.Worktree" xml:space="preserve">本地工作树</x:String>
   <x:String x:Key="Text.Worktree.CopyPath" xml:space="preserve">复制工作树路径</x:String>
   <x:String x:Key="Text.Worktree.Lock" xml:space="preserve">锁定工作树</x:String>
+  <x:String x:Key="Text.Worktree.Open" xml:space="preserve">打开工作树</x:String>
   <x:String x:Key="Text.Worktree.Remove" xml:space="preserve">移除工作树</x:String>
   <x:String x:Key="Text.Worktree.Unlock" xml:space="preserve">解除工作树锁定</x:String>
 </ResourceDictionary>

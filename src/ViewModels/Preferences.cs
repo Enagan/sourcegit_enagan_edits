@@ -65,7 +65,7 @@ namespace SourceGit.ViewModels
             set
             {
                 if (SetProperty(ref _defaultFontFamily, value) && !_isLoading)
-                    App.SetFonts(value, _monospaceFontFamily, _onlyUseMonoFontInEditor);
+                    App.SetFonts(value, _monospaceFontFamily);
             }
         }
 
@@ -75,17 +75,7 @@ namespace SourceGit.ViewModels
             set
             {
                 if (SetProperty(ref _monospaceFontFamily, value) && !_isLoading)
-                    App.SetFonts(_defaultFontFamily, value, _onlyUseMonoFontInEditor);
-            }
-        }
-
-        public bool OnlyUseMonoFontInEditor
-        {
-            get => _onlyUseMonoFontInEditor;
-            set
-            {
-                if (SetProperty(ref _onlyUseMonoFontInEditor, value) && !_isLoading)
-                    App.SetFonts(_defaultFontFamily, _monospaceFontFamily, _onlyUseMonoFontInEditor);
+                    App.SetFonts(_defaultFontFamily, value);
             }
         }
 
@@ -125,6 +115,12 @@ namespace SourceGit.ViewModels
             set;
         } = false;
 
+        public bool ShowChangesInCommitDetailByDefault
+        {
+            get;
+            set;
+        } = false;
+
         public int MaxHistoryCommits
         {
             get => _maxHistoryCommits;
@@ -152,10 +148,16 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public bool UseFixedTabWidth
+        public bool UseAutoHideScrollBars
         {
-            get => _useFixedTabWidth;
-            set => SetProperty(ref _useFixedTabWidth, value);
+            get => _useAutoHideScrollBars;
+            set => SetProperty(ref _useAutoHideScrollBars, value);
+        }
+
+        public bool UseGitHubStyleAvatar
+        {
+            get => _useGitHubStyleAvatar;
+            set => SetProperty(ref _useGitHubStyleAvatar, value);
         }
 
         public bool Check4UpdatesOnStartup
@@ -265,6 +267,12 @@ namespace SourceGit.ViewModels
         {
             get => _lfsImageActiveIdx;
             set => SetProperty(ref _lfsImageActiveIdx, value);
+        }
+
+        public int ImageDiffActiveIdx
+        {
+            get => _imageDiffActiveIdx;
+            set => SetProperty(ref _imageDiffActiveIdx, value);
         }
 
         public bool EnableCompactFoldersInChangesTree
@@ -697,7 +705,6 @@ namespace SourceGit.ViewModels
         private string _themeOverrides = string.Empty;
         private string _defaultFontFamily = string.Empty;
         private string _monospaceFontFamily = string.Empty;
-        private bool _onlyUseMonoFontInEditor = true;
         private double _defaultFontSize = 13;
         private double _editorFontSize = 13;
         private int _editorTabWidth = 4;
@@ -705,7 +712,8 @@ namespace SourceGit.ViewModels
 
         private int _maxHistoryCommits = 20000;
         private int _subjectGuideLength = 50;
-        private bool _useFixedTabWidth = true;
+        private bool _useAutoHideScrollBars = true;
+        private bool _useGitHubStyleAvatar = true;
         private bool _showAuthorTimeInGraph = false;
         private bool _showChildren = false;
 
@@ -723,6 +731,7 @@ namespace SourceGit.ViewModels
         private bool _showHiddenSymbolsInDiffView = false;
         private bool _useFullTextDiff = false;
         private int _lfsImageActiveIdx = 0;
+        private int _imageDiffActiveIdx = 0;
         private bool _enableCompactFoldersInChangesTree = false;
 
         private Models.ChangeViewMode _unstagedChangeViewMode = Models.ChangeViewMode.List;

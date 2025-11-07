@@ -7,7 +7,7 @@ The project uses the following third-party libraries or assets
 ### AvaloniaUI
 
 - **Source**: https://github.com/AvaloniaUI/Avalonia
-- **Version**: 11.3.3
+- **Version**: 11.3.8
 - **License**: MIT License
 - **License Link**: https://github.com/AvaloniaUI/Avalonia/blob/master/licence.md
 
@@ -21,7 +21,7 @@ The project uses the following third-party libraries or assets
 ### LiveChartsCore.SkiaSharpView.Avalonia
 
 - **Source**: https://github.com/beto-rodriguez/LiveCharts2
-- **Version**: 2.0.0-rc5.4
+- **Version**: 2.0.0-rc6.1
 - **License**: MIT License
 - **License Link**: https://github.com/beto-rodriguez/LiveCharts2/blob/master/LICENSE
 
@@ -35,14 +35,14 @@ The project uses the following third-party libraries or assets
 ### OpenAI .NET SDK
 
 - **Source**: https://github.com/openai/openai-dotnet
-- **Version**: 2.3.0
+- **Version**: 2.5.0
 - **License**: MIT License
 - **License Link**: https://github.com/openai/openai-dotnet/blob/main/LICENSE
 
 ### Azure.AI.OpenAI
 
 - **Source**: https://github.com/Azure/azure-sdk-for-net
-- **Version**: 2.2.0-beta.5
+- **Version**: 2.5.0-beta.1
 - **License**: MIT License
 - **License Link**: https://github.com/Azure/azure-sdk-for-net/blob/main/LICENSE.txt
 
@@ -98,3 +98,10 @@ The project uses the following third-party libraries or assets
 - **Commit**: 0e89ecdb13650dbbe5a1e85b47b2e1530bf2f355
 - **License**: MIT License
 - **License Link**: https://github.com/samuel-weinhardt/vscode-jsp-lang/blob/0e89ecdb13650dbbe5a1e85b47b2e1530bf2f355/LICENSE
+
+### vuejs-language-tools
+
+- **Source**: https://github.com/vuejs/language-tools
+- **Commit**: 68d98dc57f8486c2946ae28dc86bf8e91d45da4d
+- **License**: MIT License
+- **License Link**: https://github.com/vuejs/language-tools/blob/68d98dc57f8486c2946ae28dc86bf8e91d45da4d/LICENSE

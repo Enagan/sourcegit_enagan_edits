@@ -58,7 +58,7 @@ namespace SourceGit.ViewModels
 
         public override async Task<bool> Sure()
         {
-            _repo.SetWatcherEnabled(false);
+            using var lockWatcher = _repo.LockWatcher();
             _repo.ClearCommitMessage();
             ProgressDescription = $"Merging '{_sourceName}' into '{Into}' ...";
 
@@ -71,9 +71,12 @@ namespace SourceGit.ViewModels
 
             log.Complete();
 
-            var head = await new Commands.QueryRevisionByRefName(_repo.FullPath, "HEAD").GetResultAsync();
-            _repo.NavigateToCommit(head, true);
-            _repo.SetWatcherEnabled(true);
+            if (_repo.SelectedViewIndex == 0)
+            {
+                var head = await new Commands.QueryRevisionByRefName(_repo.FullPath, "HEAD").GetResultAsync();
+                _repo.NavigateToCommit(head, true);
+            }
+
             return true;
         }
 

@@ -35,7 +35,7 @@ namespace SourceGit.ViewModels
 
         public override async Task<bool> Sure()
         {
-            _repo.SetWatcherEnabled(false);
+            using var lockWatcher = _repo.LockWatcher();
             ProgressDescription = $"Checkout '{Branch}' ...";
 
             var log = _repo.CreateLog($"Checkout '{Branch}'");
@@ -49,10 +49,7 @@ namespace SourceGit.ViewModels
                     var msg = App.Text("Checkout.WarnLostCommits");
                     var shouldContinue = await App.AskConfirmAsync(msg);
                     if (!shouldContinue)
-                    {
-                        _repo.SetWatcherEnabled(true);
                         return true;
-                    }
                 }
             }
 
@@ -61,7 +58,7 @@ namespace SourceGit.ViewModels
 
             if (!DiscardLocalChanges)
             {
-                var changes = await new Commands.CountLocalChangesWithoutUntracked(_repo.FullPath).GetResultAsync();
+                var changes = await new Commands.CountLocalChanges(_repo.FullPath, false).GetResultAsync();
                 if (changes > 0)
                 {
                     succ = await new Commands.Stash(_repo.FullPath)
@@ -70,7 +67,6 @@ namespace SourceGit.ViewModels
                     if (!succ)
                     {
                         log.Complete();
-                        _repo.SetWatcherEnabled(true);
                         return false;
                     }
 
@@ -103,10 +99,9 @@ namespace SourceGit.ViewModels
 
             var b = _repo.Branches.Find(x => x.IsLocal && x.Name == Branch);
             if (b != null && _repo.HistoriesFilterMode == Models.FilterMode.Included)
-                _repo.SetBranchFilterMode(b, Models.FilterMode.Included, true, false);
+                _repo.SetBranchFilterMode(b, Models.FilterMode.Included, false, false);
 
             _repo.MarkBranchesDirtyManually();
-            _repo.SetWatcherEnabled(true);
 
             ProgressDescription = "Waiting for branch updated...";
             await Task.Delay(400);
