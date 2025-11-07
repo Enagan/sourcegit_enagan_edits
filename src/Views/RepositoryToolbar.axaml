@@ -77,6 +77,10 @@
       <Button Classes="icon_button" Width="32" Margin="16,0,0,0" Command="{Binding ApplyPatch}" IsVisible="{Binding !IsBare}" ToolTip.Tip="{DynamicResource Text.Apply}">
         <Path Width="14" Height="14" Data="{StaticResource Icons.Diff}"/>
       </Button>
+      
+      <Button Classes="icon_button" Width="32" Margin="8,0,0,0" Click="OpenCustomActionMenu" ToolTip.Tip="{DynamicResource Text.Repository.CustomActions}">
+        <Path Width="14" Height="14" Data="{StaticResource Icons.Action}"/>
+      </Button>
 
       <Rectangle Width="1" Height="16"
                  Margin="16,0,0,0"
@@ -97,10 +101,6 @@
 
       <Button Classes="icon_button" Width="32" Margin="8,0,0,0" Click="StartBisect" IsVisible="{Binding !IsBare}" ToolTip.Tip="{DynamicResource Text.Bisect}">
         <Path Width="14" Height="14" Data="{StaticResource Icons.Bisect}"/>
-      </Button>
-
-      <Button Classes="icon_button" Width="32" Margin="8,0,0,0" Click="OpenCustomActionMenu" ToolTip.Tip="{DynamicResource Text.Repository.CustomActions}">
-        <Path Width="14" Height="14" Data="{StaticResource Icons.Action}"/>
       </Button>
 
       <Button Classes="icon_button" Width="32" Margin="8,0,0,0" Click="Cleanup" ToolTip.Tip="{DynamicResource Text.Repository.Clean}">
