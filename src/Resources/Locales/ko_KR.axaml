@@ -54,8 +54,6 @@
   <x:String x:Key="Text.Bisect.WaitingForRange">이진 탐색 중. 현재 커밋을 '좋음' 또는 '나쁨'으로 표시하고 다른 커밋을 체크아웃하세요.</x:String>
   <x:String x:Key="Text.Blame" xml:space="preserve">블레임</x:String>
   <x:String x:Key="Text.BranchCM.Checkout" xml:space="preserve">${0}$ 체크아웃...</x:String>
-  <x:String x:Key="Text.BranchCM.CompareWithCurrent" xml:space="preserve">${0}$와(과) 비교</x:String>
-  <x:String x:Key="Text.BranchCM.CompareWithWorktree" xml:space="preserve">워크트리와 비교</x:String>
   <x:String x:Key="Text.BranchCM.CopyName" xml:space="preserve">브랜치 이름 복사</x:String>
   <x:String x:Key="Text.BranchCM.CustomAction" xml:space="preserve">사용자 지정 작업</x:String>
   <x:String x:Key="Text.BranchCM.Delete" xml:space="preserve">${0}$ 삭제...</x:String>
@@ -73,7 +71,6 @@
   <x:String x:Key="Text.BranchCM.ResetToSelectedCommit" xml:space="preserve">${0}$을(를) ${1}$(으)로 리셋...</x:String>
   <x:String x:Key="Text.BranchCM.SwitchToWorktree" xml:space="preserve">${0}$(워크트리)로 전환</x:String>
   <x:String x:Key="Text.BranchCM.Tracking" xml:space="preserve">추적 브랜치 설정...</x:String>
-  <x:String x:Key="Text.BranchCompare" xml:space="preserve">브랜치 비교</x:String>
   <x:String x:Key="Text.BranchTree.Ahead" xml:space="preserve">{0}개 커밋 앞섬</x:String>
   <x:String x:Key="Text.BranchTree.AheadBehind" xml:space="preserve">{0}개 커밋 앞섬, {1}개 커밋 뒤처짐</x:String>
   <x:String x:Key="Text.BranchTree.Behind" xml:space="preserve">{0}개 커밋 뒤처짐</x:String>
@@ -100,8 +97,7 @@
   <x:String x:Key="Text.Checkout.Commit.Warning" xml:space="preserve">경고: 커밋 체크아웃을 하면, HEAD가 분리됩니다(detached)</x:String>
   <x:String x:Key="Text.Checkout.LocalChanges" xml:space="preserve">로컬 변경 사항:</x:String>
   <x:String x:Key="Text.Checkout.LocalChanges.Discard" xml:space="preserve">폐기</x:String>
-  <x:String x:Key="Text.Checkout.LocalChanges.StashAndReply" xml:space="preserve">스태시 &amp; 재적용</x:String>
-  <x:String x:Key="Text.Checkout.RecurseSubmodules" xml:space="preserve">모든 서브모듈 업데이트</x:String>
+  <x:String x:Key="Text.Checkout.LocalChanges.StashAndReapply" xml:space="preserve">스태시 &amp; 재적용</x:String>
   <x:String x:Key="Text.Checkout.Target" xml:space="preserve">브랜치:</x:String>
   <x:String x:Key="Text.Checkout.WarnLostCommits" xml:space="preserve">현재 HEAD에 브랜치/태그에 연결되지 않은 커밋이 있습니다! 계속하시겠습니까?</x:String>
   <x:String x:Key="Text.Checkout.WithFastForward" xml:space="preserve">체크아웃 &amp; Fast-Forward</x:String>
@@ -152,6 +148,7 @@
   <x:String x:Key="Text.CommitCM.Reword" xml:space="preserve">메시지 수정</x:String>
   <x:String x:Key="Text.CommitCM.SaveAsPatch" xml:space="preserve">패치로 저장...</x:String>
   <x:String x:Key="Text.CommitCM.Squash" xml:space="preserve">부모에 합치기</x:String>
+  <x:String x:Key="Text.CommitCM.Fixup" xml:space="preserve">부모에 합치기(Fixup)</x:String>
   <x:String x:Key="Text.CommitDetail.Changes" xml:space="preserve">변경 사항</x:String>
   <x:String x:Key="Text.CommitDetail.Changes.Count" xml:space="preserve">변경된 파일</x:String>
   <x:String x:Key="Text.CommitDetail.Changes.Search" xml:space="preserve">변경 사항 검색...</x:String>
@@ -176,10 +173,8 @@
   <x:String x:Key="Text.CommitDetail.Info.SHA" xml:space="preserve">SHA</x:String>
   <x:String x:Key="Text.CommitDetail.Info.Signer" xml:space="preserve">서명자:</x:String>
   <x:String x:Key="Text.CommitDetail.Info.WebLinks" xml:space="preserve">브라우저에서 열기</x:String>
-  <x:String x:Key="Text.CommitMessageTextBox.MessagePlaceholder" xml:space="preserve">설명</x:String>
-  <x:String x:Key="Text.CommitMessageTextBox.PasteAndReplaceAll" xml:space="preserve">붙여넣기 (모두 바꾸기)</x:String>
   <x:String x:Key="Text.CommitMessageTextBox.SubjectCount" xml:space="preserve">제목</x:String>
-  <x:String x:Key="Text.CommitMessageTextBox.SubjectPlaceholder" xml:space="preserve">커밋 제목 입력</x:String>
+  <x:String x:Key="Text.Compare" xml:space="preserve">비교</x:String>
   <x:String x:Key="Text.Configure" xml:space="preserve">저장소 설정</x:String>
   <x:String x:Key="Text.Configure.CommitMessageTemplate" xml:space="preserve">커밋 템플릿</x:String>
   <x:String x:Key="Text.Configure.CommitMessageTemplate.BuiltinVars" xml:space="preserve">${files_num}, ${branch_name}, ${files} 및 ${files:N} (N은 출력할 최대 파일 경로 수)을(를) 사용할 수 있습니다.</x:String>
@@ -195,6 +190,7 @@
   ${BRANCH_FRIENDLY_NAME} 선택한 브랜치의 식별하기 쉬운 이름 (원격 브랜치의 경우 ${REMOTE} 부분 포함)
   ${SHA} 선택한 커밋의 해시
   ${TAG} 선택한 태그
+  ${FILE} 저장소 루트에 상대적인 선택된 파일
   $1, $2 ... 입력 컨트롤 값</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Executable" xml:space="preserve">실행 파일:</x:String>
   <x:String x:Key="Text.Configure.CustomAction.InputControls" xml:space="preserve">입력 컨트롤:</x:String>
@@ -203,6 +199,7 @@
   <x:String x:Key="Text.Configure.CustomAction.Scope" xml:space="preserve">범위:</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Scope.Branch" xml:space="preserve">브랜치</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Scope.Commit" xml:space="preserve">커밋</x:String>
+  <x:String x:Key="Text.Configure.CustomAction.Scope.File" xml:space="preserve">파일</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Scope.Remote" xml:space="preserve">원격</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Scope.Repository" xml:space="preserve">저장소</x:String>
   <x:String x:Key="Text.Configure.CustomAction.Scope.Tag" xml:space="preserve">태그</x:String>
@@ -272,7 +269,7 @@
   <x:String x:Key="Text.CreateBranch.Checkout" xml:space="preserve">생성된 브랜치로 체크아웃</x:String>
   <x:String x:Key="Text.CreateBranch.LocalChanges" xml:space="preserve">로컬 변경 사항:</x:String>
   <x:String x:Key="Text.CreateBranch.LocalChanges.Discard" xml:space="preserve">폐기</x:String>
-  <x:String x:Key="Text.CreateBranch.LocalChanges.StashAndReply" xml:space="preserve">스태시 &amp; 재적용</x:String>
+  <x:String x:Key="Text.CreateBranch.LocalChanges.StashAndReapply" xml:space="preserve">스태시 &amp; 재적용</x:String>
   <x:String x:Key="Text.CreateBranch.Name" xml:space="preserve">새 브랜치 이름:</x:String>
   <x:String x:Key="Text.CreateBranch.Name.Placeholder" xml:space="preserve">브랜치 이름을 입력하세요.</x:String>
   <x:String x:Key="Text.CreateBranch.Title" xml:space="preserve">로컬 브랜치 생성</x:String>
@@ -319,7 +316,7 @@
   <x:String x:Key="Text.Diff.Binary" xml:space="preserve">바이너리 비교</x:String>
   <x:String x:Key="Text.Diff.FileModeChanged" xml:space="preserve">파일 모드 변경됨</x:String>
   <x:String x:Key="Text.Diff.First" xml:space="preserve">첫 번째 차이점</x:String>
-  <x:String x:Key="Text.Diff.IgnoreWhitespace" xml:space="preserve">모든 공백 변경 사항 무시</x:String>
+  <x:String x:Key="Text.Diff.IgnoreWhitespace" xml:space="preserve">공백 변경 사항 무시</x:String>
   <x:String x:Key="Text.Diff.Image.Blend" xml:space="preserve">혼합</x:String>
   <x:String x:Key="Text.Diff.Image.Difference" xml:space="preserve">차이점</x:String>
   <x:String x:Key="Text.Diff.Image.SideBySide" xml:space="preserve">나란히 보기</x:String>
@@ -520,7 +517,6 @@
   <x:String x:Key="Text.NotConfigured" xml:space="preserve">Git이 구성되지 않았습니다. [환경설정]으로 이동하여 먼저 구성하세요.</x:String>
   <x:String x:Key="Text.OpenAppDataDir" xml:space="preserve">데이터 저장 디렉터리 열기</x:String>
   <x:String x:Key="Text.OpenInExternalMergeTool" xml:space="preserve">병합 도구에서 열기</x:String>
-  <x:String x:Key="Text.OpenWith" xml:space="preserve">다음으로 열기...</x:String>
   <x:String x:Key="Text.Optional" xml:space="preserve">선택 사항.</x:String>
   <x:String x:Key="Text.PageTabBar.New" xml:space="preserve">새 탭 만들기</x:String>
   <x:String x:Key="Text.PageTabBar.Tab.Bookmark" xml:space="preserve">북마크</x:String>
@@ -613,8 +609,7 @@
   <x:String x:Key="Text.Pull.Into" xml:space="preserve">대상:</x:String>
   <x:String x:Key="Text.Pull.LocalChanges" xml:space="preserve">로컬 변경 사항:</x:String>
   <x:String x:Key="Text.Pull.LocalChanges.Discard" xml:space="preserve">폐기</x:String>
-  <x:String x:Key="Text.Pull.LocalChanges.StashAndReply" xml:space="preserve">스태시 &amp; 재적용</x:String>
-  <x:String x:Key="Text.Pull.RecurseSubmodules" xml:space="preserve">모든 서브모듈 업데이트</x:String>
+  <x:String x:Key="Text.Pull.LocalChanges.StashAndReapply" xml:space="preserve">스태시 &amp; 재적용</x:String>
   <x:String x:Key="Text.Pull.Remote" xml:space="preserve">원격:</x:String>
   <x:String x:Key="Text.Pull.Title" xml:space="preserve">Pull (Fetch &amp; 병합)</x:String>
   <x:String x:Key="Text.Pull.UseRebase" xml:space="preserve">병합 대신 리베이스 사용</x:String>
@@ -764,8 +759,6 @@
   <x:String x:Key="Text.SetUpstream.Upstream" xml:space="preserve">업스트림:</x:String>
   <x:String x:Key="Text.SHALinkCM.CopySHA" xml:space="preserve">SHA 복사</x:String>
   <x:String x:Key="Text.SHALinkCM.NavigateTo" xml:space="preserve">이동</x:String>
-  <x:String x:Key="Text.Squash" xml:space="preserve">커밋 스쿼시</x:String>
-  <x:String x:Key="Text.Squash.Into" xml:space="preserve">대상:</x:String>
   <x:String x:Key="Text.SSHKey" xml:space="preserve">SSH 개인 키:</x:String>
   <x:String x:Key="Text.SSHKey.Placeholder" xml:space="preserve">개인 SSH 키 저장 경로</x:String>
   <x:String x:Key="Text.Start" xml:space="preserve">시작</x:String>

@@ -103,7 +103,7 @@ namespace SourceGit.ViewModels
                         ResetAuthor = false;
                     }
 
-                    Staged = GetStagedChanges();
+                    Staged = GetStagedChanges(_cached);
                     VisibleStaged = GetVisibleChanges(_staged);
                     SelectedStaged = [];
                 }
@@ -271,8 +271,6 @@ namespace SourceGit.ViewModels
                 return;
             }
 
-            _cached = changes;
-
             var lastSelectedUnstaged = new HashSet<string>();
             var lastSelectedStaged = new HashSet<string>();
             if (_selectedUnstaged is { Count: > 0 })
@@ -305,7 +303,7 @@ namespace SourceGit.ViewModels
                     selectedUnstaged.Add(c);
             }
 
-            var staged = GetStagedChanges();
+            var staged = GetStagedChanges(changes);
 
             var visibleStaged = GetVisibleChanges(staged);
             var selectedStaged = new List<Models.Change>();
@@ -321,6 +319,7 @@ namespace SourceGit.ViewModels
                     return;
 
                 _isLoadingData = true;
+                _cached = changes;
                 HasUnsolvedConflicts = hasConflict;
                 VisibleUnstaged = visibleUnstaged;
                 VisibleStaged = visibleStaged;
@@ -333,13 +332,6 @@ namespace SourceGit.ViewModels
                 UpdateDetail();
                 UpdateInProgressState();
             });
-        }
-
-        public void OpenWithDefaultEditor(Models.Change c)
-        {
-            var absPath = Native.OS.GetAbsPath(_repo.FullPath, c.Path);
-            if (File.Exists(absPath))
-                Native.OS.OpenWithDefaultEditor(absPath);
         }
 
         public async Task StageChangesAsync(List<Models.Change> changes, Models.Change next)
@@ -355,22 +347,15 @@ namespace SourceGit.ViewModels
             using var lockWatcher = _repo.LockWatcher();
 
             var log = _repo.CreateLog("Stage");
-            if (count == _unstaged.Count)
+            var pathSpecFile = Path.GetTempFileName();
+            await using (var writer = new StreamWriter(pathSpecFile))
             {
-                await new Commands.Add(_repo.FullPath, _repo.IncludeUntracked).Use(log).ExecAsync();
+                foreach (var c in canStaged)
+                    await writer.WriteLineAsync(c.Path);
             }
-            else
-            {
-                var pathSpecFile = Path.GetTempFileName();
-                await using (var writer = new StreamWriter(pathSpecFile))
-                {
-                    foreach (var c in canStaged)
-                        await writer.WriteLineAsync(c.Path);
-                }
 
-                await new Commands.Add(_repo.FullPath, pathSpecFile).Use(log).ExecAsync();
-                File.Delete(pathSpecFile);
-            }
+            await new Commands.Add(_repo.FullPath, pathSpecFile).Use(log).ExecAsync();
+            File.Delete(pathSpecFile);
             log.Complete();
 
             _repo.MarkWorkingCopyDirtyManually();
@@ -392,7 +377,7 @@ namespace SourceGit.ViewModels
             if (_useAmend)
             {
                 log.AppendLine("$ git update-index --index-info ");
-                await new Commands.UnstageChangesForAmend(_repo.FullPath, changes).ExecAsync();
+                await new Commands.UpdateIndexInfo(_repo.FullPath, changes).ExecAsync();
             }
             else
             {
@@ -407,7 +392,7 @@ namespace SourceGit.ViewModels
                     }
                 }
 
-                await new Commands.Restore(_repo.FullPath, pathSpecFile, true).Use(log).ExecAsync();
+                await new Commands.Reset(_repo.FullPath, pathSpecFile).Use(log).ExecAsync();
                 File.Delete(pathSpecFile);
             }
             log.Complete();
@@ -547,10 +532,8 @@ namespace SourceGit.ViewModels
                 if (File.Exists(mergeMsgFile) && !string.IsNullOrWhiteSpace(_commitMessage))
                     await File.WriteAllTextAsync(mergeMsgFile, _commitMessage);
 
-                var succ = await _inProgressContext.ContinueAsync();
-                if (succ)
-                    CommitMessage = string.Empty;
-
+                await _inProgressContext.ContinueAsync();
+                CommitMessage = string.Empty;
                 IsCommitting = false;
             }
             else
@@ -566,10 +549,8 @@ namespace SourceGit.ViewModels
                 using var lockWatcher = _repo.LockWatcher();
                 IsCommitting = true;
 
-                var succ = await _inProgressContext.SkipAsync();
-                if (succ)
-                    CommitMessage = string.Empty;
-
+                await _inProgressContext.SkipAsync();
+                CommitMessage = string.Empty;
                 IsCommitting = false;
             }
             else
@@ -585,10 +566,8 @@ namespace SourceGit.ViewModels
                 using var lockWatcher = _repo.LockWatcher();
                 IsCommitting = true;
 
-                var succ = await _inProgressContext.AbortAsync();
-                if (succ)
-                    CommitMessage = string.Empty;
-
+                await _inProgressContext.AbortAsync();
+                CommitMessage = string.Empty;
                 IsCommitting = false;
             }
             else
@@ -659,16 +638,11 @@ namespace SourceGit.ViewModels
             IsCommitting = true;
             _repo.Settings.PushCommitMessage(_commitMessage);
 
-            var log = _repo.CreateLog("Commit");
-            var succ = true;
             if (autoStage && _unstaged.Count > 0)
-                succ = await new Commands.Add(_repo.FullPath, _repo.IncludeUntracked)
-                    .Use(log)
-                    .ExecAsync()
-                    .ConfigureAwait(false);
+                await StageChangesAsync(_unstaged, null);
 
-            if (succ)
-                succ = await new Commands.Commit(_repo.FullPath, _commitMessage, EnableSignOff, NoVerifyOnCommit, _useAmend, _resetAuthor)
+            var log = _repo.CreateLog("Commit");
+            var succ = await new Commands.Commit(_repo.FullPath, _commitMessage, EnableSignOff, NoVerifyOnCommit, _useAmend, _resetAuthor)
                     .Use(log)
                     .RunAsync()
                     .ConfigureAwait(false);
@@ -740,7 +714,7 @@ namespace SourceGit.ViewModels
             return outs;
         }
 
-        private List<Models.Change> GetStagedChanges()
+        private List<Models.Change> GetStagedChanges(List<Models.Change> cached)
         {
             if (_useAmend)
             {
@@ -749,7 +723,7 @@ namespace SourceGit.ViewModels
             }
 
             var rs = new List<Models.Change>();
-            foreach (var c in _cached)
+            foreach (var c in cached)
             {
                 if (c.Index != Models.ChangeState.None)
                     rs.Add(c);
@@ -782,23 +756,19 @@ namespace SourceGit.ViewModels
             else
                 InProgressContext = null;
 
-            if (_inProgressContext == null)
+            if (_inProgressContext != null && _inProgressContext.GetType() == oldType && !string.IsNullOrEmpty(_commitMessage))
                 return;
 
-            if (_inProgressContext.GetType() == oldType && !string.IsNullOrEmpty(_commitMessage))
+            if (LoadCommitMessageFromFile(Path.Combine(_repo.GitDir, "MERGE_MSG")))
                 return;
 
-            do
-            {
-                if (LoadCommitMessageFromFile(Path.Combine(_repo.GitDir, "MERGE_MSG")))
-                    break;
+            if (_inProgressContext is not RebaseInProgress { } rebasing)
+                return;
 
-                if (LoadCommitMessageFromFile(Path.Combine(_repo.GitDir, "rebase-merge", "message")))
-                    break;
+            if (LoadCommitMessageFromFile(Path.Combine(_repo.GitDir, "rebase-merge", "message")))
+                return;
 
-                if (_inProgressContext is RebaseInProgress { StoppedAt: { } stopAt })
-                    CommitMessage = new Commands.QueryCommitFullMessage(_repo.FullPath, stopAt.SHA).GetResult();
-            } while (false);
+            CommitMessage = new Commands.QueryCommitFullMessage(_repo.FullPath, rebasing.StoppedAt.SHA).GetResult();
         }
 
         private bool LoadCommitMessageFromFile(string file)
@@ -836,7 +806,7 @@ namespace SourceGit.ViewModels
             {
                 var o = old[idx];
                 var c = cur[idx];
-                if (o.Path != c.Path || o.Index != c.Index || o.WorkTree != c.WorkTree)
+                if (!o.Path.Equals(c.Path, StringComparison.Ordinal) || o.Index != c.Index || o.WorkTree != c.WorkTree)
                     return true;
             }
 

@@ -54,17 +54,6 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public bool IsRecurseSubmoduleVisible
-        {
-            get => _repo.Submodules.Count > 0;
-        }
-
-        public bool RecurseSubmodules
-        {
-            get => _repo.Settings.UpdateSubmodulesOnCheckoutBranch;
-            set => _repo.Settings.UpdateSubmodulesOnCheckoutBranch = value;
-        }
-
         public CreateBranch(Repository repo, Models.Branch branch)
         {
             _repo = repo;
@@ -147,7 +136,7 @@ namespace SourceGit.ViewModels
                     {
                         succ = await new Commands.Stash(_repo.FullPath)
                             .Use(log)
-                            .PushAsync("CREATE_BRANCH_AUTO_STASH");
+                            .PushAsync("CREATE_BRANCH_AUTO_STASH", false);
                         if (!succ)
                         {
                             log.Complete();
@@ -164,14 +153,11 @@ namespace SourceGit.ViewModels
 
                 if (succ)
                 {
-                    if (IsRecurseSubmoduleVisible && RecurseSubmodules)
-                    {
-                        var submodules = await new Commands.QueryUpdatableSubmodules(_repo.FullPath).GetResultAsync();
-                        if (submodules.Count > 0)
-                            await new Commands.Submodule(_repo.FullPath)
-                                .Use(log)
-                                .UpdateAsync(submodules, true, true);
-                    }
+                    var submodules = await new Commands.QueryUpdatableSubmodules(_repo.FullPath, false).GetResultAsync();
+                    if (submodules.Count > 0)
+                        await new Commands.Submodule(_repo.FullPath)
+                            .Use(log)
+                            .UpdateAsync(submodules, false, true);
 
                     if (needPopStash)
                         await new Commands.Stash(_repo.FullPath)
@@ -186,20 +172,9 @@ namespace SourceGit.ViewModels
                     .CreateAsync(_baseOnRevision, _allowOverwrite);
             }
 
-            if (succ && BasedOn is Models.Branch { IsLocal: false } basedOn)
+            if (succ && BasedOn is Models.Branch { IsLocal: false } basedOn && _name.Equals(basedOn.Name, StringComparison.Ordinal))
             {
-                var autoSetUpstream = true;
-                foreach (var b in _repo.Branches)
-                {
-                    if (b.IsLocal && b.Upstream.Equals(basedOn.FullName, StringComparison.Ordinal))
-                    {
-                        autoSetUpstream = false;
-                        break;
-                    }
-                }
-
-                if (autoSetUpstream)
-                    await new Commands.Branch(_repo.FullPath, _name)
+                await new Commands.Branch(_repo.FullPath, _name)
                         .Use(log)
                         .SetUpstreamAsync(basedOn);
             }
@@ -216,7 +191,7 @@ namespace SourceGit.ViewModels
                 if (folderEndIdx > 10)
                     _repo.Settings.ExpandedBranchNodesInSideBar.Add(fake.FullName.Substring(0, folderEndIdx));
 
-                if (_repo.HistoriesFilterMode == Models.FilterMode.Included)
+                if (_repo.HistoryFilterMode == Models.FilterMode.Included)
                     _repo.SetBranchFilterMode(fake, Models.FilterMode.Included, false, false);
             }
 

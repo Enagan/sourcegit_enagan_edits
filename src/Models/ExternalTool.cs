@@ -20,7 +20,7 @@ namespace SourceGit.Models
         {
             Name = name;
             ExecFile = execFile;
-            _execArgsGenerator = execArgsGenerator ?? (repo => repo.Quoted());
+            _execArgsGenerator = execArgsGenerator ?? (path => path.Quoted());
 
             try
             {
@@ -34,13 +34,16 @@ namespace SourceGit.Models
             }
         }
 
-        public void Open(string repo)
+        public void Open(string path)
         {
+            // The executable file may be removed after the tool list is loaded (once time on startup).
+            if (!File.Exists(ExecFile))
+                return;
+
             Process.Start(new ProcessStartInfo()
             {
-                WorkingDirectory = repo,
                 FileName = ExecFile,
-                Arguments = _execArgsGenerator.Invoke(repo),
+                Arguments = _execArgsGenerator.Invoke(path),
                 UseShellExecute = false,
             });
         }
@@ -92,10 +95,12 @@ namespace SourceGit.Models
         public string LaunchCommand { get; set; }
     }
 
-    public class ExternalToolPaths
+    public class ExternalToolCustomization
     {
         [JsonPropertyName("tools")]
         public Dictionary<string, string> Tools { get; set; } = new Dictionary<string, string>();
+        [JsonPropertyName("excludes")]
+        public List<string> Excludes { get; set; } = new List<string>();
     }
 
     public class ExternalToolsFinder
@@ -114,7 +119,7 @@ namespace SourceGit.Models
                 if (File.Exists(customPathsConfig))
                 {
                     using var stream = File.OpenRead(customPathsConfig);
-                    _customPaths = JsonSerializer.Deserialize(stream, JsonCodeGen.Default.ExternalToolPaths);
+                    _customization = JsonSerializer.Deserialize(stream, JsonCodeGen.Default.ExternalToolCustomization);
                 }
             }
             catch
@@ -122,12 +127,15 @@ namespace SourceGit.Models
                 // Ignore
             }
 
-            _customPaths ??= new ExternalToolPaths();
+            _customization ??= new ExternalToolCustomization();
         }
 
         public void TryAdd(string name, string icon, Func<string> finder, Func<string, string> execArgsGenerator = null)
         {
-            if (_customPaths.Tools.TryGetValue(name, out var customPath) && File.Exists(customPath))
+            if (_customization.Excludes.Contains(name))
+                return;
+
+            if (_customization.Tools.TryGetValue(name, out var customPath) && File.Exists(customPath))
             {
                 Tools.Add(new ExternalTool(name, icon, customPath, execArgsGenerator));
             }
@@ -154,11 +162,6 @@ namespace SourceGit.Models
             TryAdd("VSCodium", "codium", platformFinder);
         }
 
-        public void Fleet(Func<string> platformFinder)
-        {
-            TryAdd("Fleet", "fleet", platformFinder);
-        }
-
         public void SublimeText(Func<string> platformFinder)
         {
             TryAdd("Sublime Text", "sublime_text", platformFinder);
@@ -181,21 +184,28 @@ namespace SourceGit.Models
             var state = Path.Combine(platformFinder(), "state.json");
             if (File.Exists(state))
             {
-                using var stream = File.OpenRead(state);
-                var stateData = JsonSerializer.Deserialize(stream, JsonCodeGen.Default.JetBrainsState);
-                foreach (var tool in stateData.Tools)
+                try
                 {
-                    if (exclude.Contains(tool.ToolId.ToLowerInvariant()))
-                        continue;
+                    using var stream = File.OpenRead(state);
+                    var stateData = JsonSerializer.Deserialize(stream, JsonCodeGen.Default.JetBrainsState);
+                    foreach (var tool in stateData.Tools)
+                    {
+                        if (exclude.Contains(tool.ToolId.ToLowerInvariant()))
+                            continue;
 
-                    Tools.Add(new ExternalTool(
-                        $"{tool.DisplayName} {tool.DisplayVersion}",
-                        supportedIcons.Contains(tool.ProductCode) ? $"JetBrains/{tool.ProductCode}" : "JetBrains/JB",
-                        Path.Combine(tool.InstallLocation, tool.LaunchCommand)));
+                        Tools.Add(new ExternalTool(
+                            $"{tool.DisplayName} {tool.DisplayVersion}",
+                            supportedIcons.Contains(tool.ProductCode) ? $"JetBrains/{tool.ProductCode}" : "JetBrains/JB",
+                            Path.Combine(tool.InstallLocation, tool.LaunchCommand)));
+                    }
+                }
+                catch
+                {
+                    // Ignore exceptions.
                 }
             }
         }
 
-        private ExternalToolPaths _customPaths = null;
+        private ExternalToolCustomization _customization = null;
     }
 }

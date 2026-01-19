@@ -23,11 +23,11 @@ namespace SourceGit.ViewModels
             get => _commits;
             set
             {
-                var lastSelected = AutoSelectedCommit;
+                var lastSelected = SelectedCommit;
                 if (SetProperty(ref _commits, value))
                 {
                     if (value.Count > 0 && lastSelected != null)
-                        AutoSelectedCommit = value.Find(x => x.SHA == lastSelected.SHA);
+                        SelectedCommit = value.Find(x => x.SHA == lastSelected.SHA);
                 }
             }
         }
@@ -38,10 +38,10 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _graph, value);
         }
 
-        public Models.Commit AutoSelectedCommit
+        public Models.Commit SelectedCommit
         {
-            get => _autoSelectedCommit;
-            set => SetProperty(ref _autoSelectedCommit, value);
+            get => _selectedCommit;
+            set => SetProperty(ref _selectedCommit, value);
         }
 
         public long NavigationId
@@ -97,7 +97,7 @@ namespace SourceGit.ViewModels
             Commits = [];
             _repo = null;
             _graph = null;
-            _autoSelectedCommit = null;
+            _selectedCommit = null;
             _detailContext?.Dispose();
             _detailContext = null;
         }
@@ -138,7 +138,8 @@ namespace SourceGit.ViewModels
             var commit = _commits.Find(x => x.SHA.StartsWith(commitSHA, StringComparison.Ordinal));
             if (commit != null)
             {
-                NavigateTo(commit);
+                SelectedCommit = commit;
+                NavigationId = _navigationId + 1;
                 return;
             }
 
@@ -148,24 +149,44 @@ namespace SourceGit.ViewModels
                     .GetResultAsync()
                     .ConfigureAwait(false);
 
-                Dispatcher.UIThread.Post(() => NavigateTo(c));
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _ignoreSelectionChange = true;
+                    SelectedCommit = null;
+
+                    if (_detailContext is CommitDetail detail)
+                    {
+                        detail.Commit = c;
+                    }
+                    else
+                    {
+                        var commitDetail = new CommitDetail(_repo, _commitDetailSharedData);
+                        commitDetail.Commit = c;
+                        DetailContext = commitDetail;
+                    }
+
+                    _ignoreSelectionChange = false;
+                });
             });
         }
 
         public void Select(IList commits)
         {
+            if (_ignoreSelectionChange)
+                return;
+
             if (commits.Count == 0)
             {
-                _repo.SelectedSearchedCommit = null;
+                _repo.SearchCommitContext.Selected = null;
                 DetailContext = null;
             }
             else if (commits.Count == 1)
             {
                 var commit = (commits[0] as Models.Commit)!;
-                if (_repo.SelectedSearchedCommit == null || _repo.SelectedSearchedCommit.SHA != commit.SHA)
-                    _repo.SelectedSearchedCommit = _repo.SearchedCommits.Find(x => x.SHA == commit.SHA);
+                if (_repo.SearchCommitContext.Selected == null || _repo.SearchCommitContext.Selected.SHA != commit.SHA)
+                    _repo.SearchCommitContext.Selected = _repo.SearchCommitContext.Results?.Find(x => x.SHA == commit.SHA);
 
-                AutoSelectedCommit = commit;
+                SelectedCommit = commit;
                 NavigationId = _navigationId + 1;
 
                 if (_detailContext is CommitDetail detail)
@@ -181,7 +202,7 @@ namespace SourceGit.ViewModels
             }
             else if (commits.Count == 2)
             {
-                _repo.SelectedSearchedCommit = null;
+                _repo.SearchCommitContext.Selected = null;
 
                 var end = commits[0] as Models.Commit;
                 var start = commits[1] as Models.Commit;
@@ -189,7 +210,7 @@ namespace SourceGit.ViewModels
             }
             else
             {
-                _repo.SelectedSearchedCommit = null;
+                _repo.SearchCommitContext.Selected = null;
                 DetailContext = new Models.Count(commits.Count);
             }
         }
@@ -321,14 +342,23 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public async Task SquashHeadAsync(Models.Commit head)
+        public async Task SquashOrFixupHeadAsync(Models.Commit head, bool fixup)
         {
             if (head.Parents.Count == 1)
             {
-                var message = await new Commands.QueryCommitFullMessage(_repo.FullPath, head.SHA).GetResultAsync();
-                var parent = _commits.Find(x => x.SHA.Equals(head.Parents[0]));
-                if (parent != null && _repo.CanCreatePopup())
-                    _repo.ShowPopup(new Squash(_repo, parent, message));
+                var parent = await new Commands.QuerySingleCommit(_repo.FullPath, head.Parents[0]).GetResultAsync();
+                if (parent == null)
+                    return;
+
+                string message = await new Commands.QueryCommitFullMessage(_repo.FullPath, head.Parents[0]).GetResultAsync();
+                if (!fixup)
+                {
+                    var headMessage = await new Commands.QueryCommitFullMessage(_repo.FullPath, head.SHA).GetResultAsync();
+                    message = $"{message}\n\n{headMessage}";
+                }
+
+                if (_repo.CanCreatePopup())
+                    _repo.ShowPopup(new SquashOrFixupHead(_repo, parent, message, fixup));
             }
         }
 
@@ -370,7 +400,7 @@ namespace SourceGit.ViewModels
             var head = _commits.Find(x => x.IsCurrentHead);
             if (head == null)
             {
-                _repo.SelectedSearchedCommit = null;
+                _repo.SearchCommitContext.Selected = null;
                 head = await new Commands.QuerySingleCommit(_repo.FullPath, "HEAD").GetResultAsync();
                 if (head != null)
                     DetailContext = new RevisionCompare(_repo.FullPath, commit, head);
@@ -386,40 +416,16 @@ namespace SourceGit.ViewModels
             DetailContext = new RevisionCompare(_repo.FullPath, commit, null);
         }
 
-        private void NavigateTo(Models.Commit commit)
-        {
-            AutoSelectedCommit = commit;
-
-            if (commit == null)
-            {
-                DetailContext = null;
-            }
-            else
-            {
-                NavigationId = _navigationId + 1;
-
-                if (_detailContext is CommitDetail detail)
-                {
-                    detail.Commit = commit;
-                }
-                else
-                {
-                    var commitDetail = new CommitDetail(_repo, _commitDetailSharedData);
-                    commitDetail.Commit = commit;
-                    DetailContext = commitDetail;
-                }
-            }
-        }
-
         private Repository _repo = null;
         private CommitDetailSharedData _commitDetailSharedData = null;
         private bool _isLoading = true;
         private List<Models.Commit> _commits = new List<Models.Commit>();
         private Models.CommitGraph _graph = null;
-        private Models.Commit _autoSelectedCommit = null;
+        private Models.Commit _selectedCommit = null;
         private Models.Bisect _bisect = null;
         private long _navigationId = 0;
         private IDisposable _detailContext = null;
+        private bool _ignoreSelectionChange = false;
 
         private GridLength _leftArea = new GridLength(1, GridUnitType.Star);
         private GridLength _rightArea = new GridLength(1, GridUnitType.Star);

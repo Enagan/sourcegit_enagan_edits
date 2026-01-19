@@ -8,15 +8,20 @@
              x:Class="SourceGit.Views.CheckoutCommit"
              x:DataType="vm:CheckoutCommit">
   <StackPanel Orientation="Vertical" Margin="8,0">
-    <TextBlock FontSize="18"
-               Classes="bold"
-               Text="{DynamicResource Text.Checkout.Commit}" />
+    <StackPanel Orientation="Horizontal">
+      <Path Width="16" Height="16"
+            Data="{StaticResource Icons.Detached}"/>
+
+      <TextBlock FontSize="18"
+                 Margin="8,0,0,0"
+                 Classes="bold"
+                 Text="{DynamicResource Text.Checkout.Commit}"/>
+    </StackPanel>
 
     <Grid Margin="0,16,0,0" ColumnDefinitions="Auto,*">
       <Grid.RowDefinitions>
         <RowDefinition Height="32"/>
         <RowDefinition Height="Auto" MinHeight="32"/>
-        <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       
@@ -35,7 +40,7 @@
                  Margin="0,0,8,0"
                  Text="{DynamicResource Text.Checkout.LocalChanges}"/>
       <WrapPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-        <RadioButton Content="{DynamicResource Text.Checkout.LocalChanges.StashAndReply}"
+        <RadioButton Content="{DynamicResource Text.Checkout.LocalChanges.StashAndReapply}"
                      GroupName="LocalChanges"
                      Margin="0,0,8,0"
                      IsChecked="{Binding !DiscardLocalChanges, Mode=TwoWay}"/>
@@ -43,14 +48,7 @@
                      GroupName="LocalChanges"/>
       </WrapPanel>
 
-      <CheckBox Grid.Row="2" Grid.Column="1"
-                Height="32"
-                Content="{DynamicResource Text.Checkout.RecurseSubmodules}"
-                IsChecked="{Binding RecurseSubmodules, Mode=TwoWay}"
-                IsVisible="{Binding IsRecurseSubmoduleVisible}"
-                ToolTip.Tip="--recurse-submodules"/>
-
-      <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="Auto,*" Margin="0,6,0,0">
+      <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="Auto,*" Margin="0,6,0,0">
         <Path Grid.Column="0"
               Width="14" Height="14"
               Data="{StaticResource Icons.Error}"

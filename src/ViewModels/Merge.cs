@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace SourceGit.ViewModels
 {
@@ -16,8 +17,20 @@ namespace SourceGit.ViewModels
 
         public Models.MergeMode Mode
         {
-            get;
-            set;
+            get => _mode;
+            set
+            {
+                if (SetProperty(ref _mode, value))
+                    CanEditMessage = _mode == Models.MergeMode.Default ||
+                        _mode == Models.MergeMode.FastForward ||
+                        _mode == Models.MergeMode.NoFastForward;
+            }
+        }
+
+        public bool CanEditMessage
+        {
+            get => _canEditMessage;
+            set => SetProperty(ref _canEditMessage, value);
         }
 
         public bool Edit
@@ -65,13 +78,29 @@ namespace SourceGit.ViewModels
             var log = _repo.CreateLog($"Merging '{_sourceName}' into '{Into}'");
             Use(log);
 
-            await new Commands.Merge(_repo.FullPath, _sourceName, Mode.Arg, Edit)
+            var succ = await new Commands.Merge(_repo.FullPath, _sourceName, Mode.Arg, _canEditMessage && Edit)
                 .Use(log)
                 .ExecAsync();
 
+            if (succ)
+            {
+                var squashMsgFile = Path.Combine(_repo.GitDir, "SQUASH_MSG");
+                if (Mode == Models.MergeMode.Squash && File.Exists(squashMsgFile))
+                {
+                    var msg = await File.ReadAllTextAsync(squashMsgFile);
+                    _repo.SetCommitMessage(msg);
+                }
+
+                var submodules = await new Commands.QueryUpdatableSubmodules(_repo.FullPath, false).GetResultAsync();
+                if (submodules.Count > 0)
+                    await new Commands.Submodule(_repo.FullPath)
+                        .Use(log)
+                        .UpdateAsync(submodules, false, true);
+            }
+
             log.Complete();
 
-            if (_repo.SelectedViewIndex == 0)
+            if (succ && _repo.SelectedViewIndex == 0)
             {
                 var head = await new Commands.QueryRevisionByRefName(_repo.FullPath, "HEAD").GetResultAsync();
                 _repo.NavigateToCommit(head, true);
@@ -104,5 +133,7 @@ namespace SourceGit.ViewModels
 
         private readonly Repository _repo = null;
         private readonly string _sourceName;
+        private Models.MergeMode _mode = Models.MergeMode.Default;
+        private bool _canEditMessage = true;
     }
 }

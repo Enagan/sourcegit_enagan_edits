@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -20,17 +21,21 @@ namespace SourceGit.Commands
 
         public Diff(string repo, Models.DiffOption opt, int unified, bool ignoreWhitespace)
         {
-            _result.TextDiff = new Models.TextDiff() { Option = opt };
+            _result.TextDiff = new Models.TextDiff();
 
             WorkingDirectory = repo;
             Context = repo;
 
+            var builder = new StringBuilder(256);
+            builder.Append("diff --no-color --no-ext-diff --patch ");
+            if (Models.DiffOption.IgnoreCRAtEOL)
+                builder.Append("--ignore-cr-at-eol ");
             if (ignoreWhitespace)
-                Args = $"diff --no-ext-diff --patch --ignore-all-space --unified={unified} {opt}";
-            else if (Models.DiffOption.IgnoreCRAtEOL)
-                Args = $"diff --no-ext-diff --patch --ignore-cr-at-eol --unified={unified} {opt}";
-            else
-                Args = $"diff --no-ext-diff --patch --unified={unified} {opt}";
+                builder.Append("--ignore-space-change ");
+            builder.Append("--unified=").Append(unified).Append(' ');
+            builder.Append(opt.ToString());
+
+            Args = builder.ToString();
         }
 
         public async Task<Models.DiffResult> ReadAsync()
@@ -41,8 +46,21 @@ namespace SourceGit.Commands
                 proc.StartInfo = CreateGitStartInfo(true);
                 proc.Start();
 
-                while (await proc.StandardOutput.ReadLineAsync() is { } line)
+                var text = await proc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+
+                var start = 0;
+                var end = text.IndexOf('\n', start);
+                while (end > 0)
+                {
+                    var line = text[start..end];
                     ParseLine(line);
+
+                    start = end + 1;
+                    end = text.IndexOf('\n', start);
+                }
+
+                if (start < text.Length)
+                    ParseLine(text[start..]);
 
                 await proc.WaitForExitAsync().ConfigureAwait(false);
             }
@@ -247,10 +265,10 @@ namespace SourceGit.Commands
                         foreach (var chunk in chunks)
                         {
                             if (chunk.DeletedCount > 0)
-                                left.Highlights.Add(new Models.TextInlineRange(chunk.DeletedStart, chunk.DeletedCount));
+                                left.Highlights.Add(new Models.TextRange(chunk.DeletedStart, chunk.DeletedCount));
 
                             if (chunk.AddedCount > 0)
-                                right.Highlights.Add(new Models.TextInlineRange(chunk.AddedStart, chunk.AddedCount));
+                                right.Highlights.Add(new Models.TextRange(chunk.AddedStart, chunk.AddedCount));
                         }
                     }
                 }

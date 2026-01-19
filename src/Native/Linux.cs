@@ -54,7 +54,6 @@ namespace SourceGit.Native
             finder.VSCodeInsiders(() => FindExecutable("code-insiders"));
             finder.VSCodium(() => FindExecutable("codium"));
             finder.Cursor(() => FindExecutable("cursor"));
-            finder.Fleet(() => FindJetBrainsFleet(localAppDataDir));
             finder.FindJetBrainsFromToolbox(() => Path.Combine(localAppDataDir, "JetBrains/Toolbox"));
             finder.SublimeText(() => FindExecutable("subl"));
             finder.Zed(() =>
@@ -67,7 +66,10 @@ namespace SourceGit.Native
 
         public void OpenBrowser(string url)
         {
-            Process.Start("xdg-open", url.Quoted());
+            var browser = Environment.GetEnvironmentVariable("BROWSER");
+            if (string.IsNullOrEmpty(browser))
+                browser = "xdg-open";
+            Process.Start(browser, url.Quoted());
         }
 
         public void OpenInFileManager(string path, bool select)
@@ -84,20 +86,15 @@ namespace SourceGit.Native
             }
         }
 
-        public void OpenTerminal(string workdir)
+        public void OpenTerminal(string workdir, string args)
         {
             var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var cwd = string.IsNullOrEmpty(workdir) ? home : workdir;
-            var terminal = OS.ShellOrTerminal;
 
             var startInfo = new ProcessStartInfo();
             startInfo.WorkingDirectory = cwd;
-            startInfo.FileName = terminal;
-
-            if (terminal.EndsWith("wezterm", StringComparison.OrdinalIgnoreCase))
-                startInfo.Arguments = $"start --cwd {cwd.Quoted()}";
-            else if (terminal.EndsWith("ptyxis", StringComparison.OrdinalIgnoreCase))
-                startInfo.Arguments = $"--new-window --working-directory={cwd.Quoted()}";
+            startInfo.FileName = OS.ShellOrTerminal;
+            startInfo.Arguments = args;
 
             try
             {
@@ -136,12 +133,6 @@ namespace SourceGit.Native
 
             var local = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", filename);
             return File.Exists(local) ? local : string.Empty;
-        }
-
-        private string FindJetBrainsFleet(string localAppDataDir)
-        {
-            var path = Path.Combine(localAppDataDir, "JetBrains/Toolbox/apps/fleet/bin/Fleet");
-            return File.Exists(path) ? path : FindExecutable("fleet");
         }
     }
 }

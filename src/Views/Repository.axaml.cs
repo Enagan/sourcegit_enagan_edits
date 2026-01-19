@@ -33,14 +33,12 @@ namespace SourceGit.Views
 
             if (e.Key == Key.Enter)
             {
-                if (!string.IsNullOrWhiteSpace(repo.SearchCommitFilter))
-                    repo.StartSearchCommits();
-
+                repo.SearchCommitContext.StartSearch();
                 e.Handled = true;
             }
             else if (e.Key == Key.Down)
             {
-                if (repo.MatchedFilesForSearching is { Count: > 0 })
+                if (repo.SearchCommitContext.Suggestions is { Count: > 0 })
                 {
                     SearchSuggestionBox.Focus(NavigationMethod.Tab);
                     SearchSuggestionBox.SelectedIndex = 0;
@@ -50,14 +48,17 @@ namespace SourceGit.Views
             }
             else if (e.Key == Key.Escape)
             {
-                repo.ClearMatchedFilesForSearching();
+                repo.SearchCommitContext.ClearSuggestions();
                 e.Handled = true;
             }
         }
 
-        private void OnBranchTreeRowsChanged(object _, RoutedEventArgs e)
+        private void OnClearSearchCommitFilter(object _, RoutedEventArgs e)
         {
-            UpdateLeftSidebarLayout();
+            if (DataContext is not ViewModels.Repository repo)
+                return;
+
+            repo.SearchCommitContext.ClearFilter();
             e.Handled = true;
         }
 
@@ -73,22 +74,10 @@ namespace SourceGit.Views
             TagsList.UnselectAll();
         }
 
-        private void OnTagsRowsChanged(object _, RoutedEventArgs e)
-        {
-            UpdateLeftSidebarLayout();
-            e.Handled = true;
-        }
-
         private void OnTagsSelectionChanged(object _1, RoutedEventArgs _2)
         {
             LocalBranchTree.UnselectAll();
             RemoteBranchTree.UnselectAll();
-        }
-
-        private void OnSubmodulesRowsChanged(object _, RoutedEventArgs e)
-        {
-            UpdateLeftSidebarLayout();
-            e.Handled = true;
         }
 
         private void OnWorktreeContextRequested(object sender, ContextRequestedEventArgs e)
@@ -172,6 +161,12 @@ namespace SourceGit.Views
         {
             if (e.Property == ItemsControl.ItemsSourceProperty || e.Property == IsVisibleProperty)
                 UpdateLeftSidebarLayout();
+        }
+
+        private void OnLeftSidebarRowsChanged(object _, RoutedEventArgs e)
+        {
+            UpdateLeftSidebarLayout();
+            e.Handled = true;
         }
 
         private void OnLeftSidebarSizeChanged(object _, SizeChangedEventArgs e)
@@ -310,14 +305,14 @@ namespace SourceGit.Views
 
             if (e.Key == Key.Escape)
             {
-                repo.ClearMatchedFilesForSearching();
+                repo.SearchCommitContext.ClearSuggestions();
                 e.Handled = true;
             }
             else if (e.Key == Key.Enter && SearchSuggestionBox.SelectedItem is string content)
             {
-                repo.SearchCommitFilter = content;
+                repo.SearchCommitContext.Filter = content;
                 TxtSearchCommitsBox.CaretIndex = content.Length;
-                repo.StartSearchCommits();
+                repo.SearchCommitContext.StartSearch();
                 e.Handled = true;
             }
         }
@@ -330,9 +325,9 @@ namespace SourceGit.Views
             var content = (sender as StackPanel)?.DataContext as string;
             if (!string.IsNullOrEmpty(content))
             {
-                repo.SearchCommitFilter = content;
+                repo.SearchCommitContext.Filter = content;
                 TxtSearchCommitsBox.CaretIndex = content.Length;
-                repo.StartSearchCommits();
+                repo.SearchCommitContext.StartSearch();
             }
             e.Handled = true;
         }
@@ -554,8 +549,8 @@ namespace SourceGit.Views
 
                 var menu = new ContextMenu();
                 menu.Placement = PlacementMode.BottomEdgeAlignedLeft;
-                menu.Items.Add(byCreatorDate);
                 menu.Items.Add(byName);
+                menu.Items.Add(byCreatorDate);
                 menu.Open(button);
             }
 
@@ -586,10 +581,10 @@ namespace SourceGit.Views
             e.Handled = true;
         }
 
-        private void OnRemoveSelectedHistoriesFilter(object sender, RoutedEventArgs e)
+        private void OnRemoveSelectedHistoryFilter(object sender, RoutedEventArgs e)
         {
-            if (DataContext is ViewModels.Repository repo && sender is Button { DataContext: Models.Filter filter })
-                repo.RemoveHistoriesFilter(filter);
+            if (DataContext is ViewModels.Repository repo && sender is Button { DataContext: Models.HistoryFilter filter })
+                repo.RemoveHistoryFilter(filter);
 
             e.Handled = true;
         }

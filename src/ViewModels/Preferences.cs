@@ -23,6 +23,7 @@ namespace SourceGit.ViewModels
 
                 _instance.PrepareGit();
                 _instance.PrepareShellOrTerminal();
+                _instance.PrepareExternalDiffMergeTool();
                 _instance.PrepareWorkspaces();
 
                 return _instance;
@@ -103,6 +104,12 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _editorTabWidth, value);
         }
 
+        public double Zoom
+        {
+            get => _zoom;
+            set => SetProperty(ref _zoom, value);
+        }
+
         public LayoutInfo Layout
         {
             get => _layout;
@@ -146,6 +153,12 @@ namespace SourceGit.ViewModels
                     OnPropertyChanged();
                 }
             }
+        }
+
+        public bool UseFixedTabWidth
+        {
+            get => _useFixedTabWidth;
+            set => SetProperty(ref _useFixedTabWidth, value);
         }
 
         public bool UseAutoHideScrollBars
@@ -338,12 +351,12 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public int ShellOrTerminal
+        public int ShellOrTerminalType
         {
-            get => _shellOrTerminal;
+            get => _shellOrTerminalType;
             set
             {
-                if (SetProperty(ref _shellOrTerminal, value))
+                if (SetProperty(ref _shellOrTerminalType, value) && !_isLoading)
                 {
                     if (value >= 0 && value < Models.ShellOrTerminal.Supported.Count)
                         Native.OS.SetShellOrTerminal(Models.ShellOrTerminal.Supported[value]);
@@ -351,6 +364,7 @@ namespace SourceGit.ViewModels
                         Native.OS.SetShellOrTerminal(null);
 
                     OnPropertyChanged(nameof(ShellOrTerminalPath));
+                    OnPropertyChanged(nameof(ShellOrTerminalArgs));
                 }
             }
         }
@@ -363,6 +377,19 @@ namespace SourceGit.ViewModels
                 if (value != Native.OS.ShellOrTerminal)
                 {
                     Native.OS.ShellOrTerminal = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ShellOrTerminalArgs
+        {
+            get => Native.OS.ShellOrTerminalArgs;
+            set
+            {
+                if (value != Native.OS.ShellOrTerminalArgs)
+                {
+                    Native.OS.ShellOrTerminalArgs = value;
                     OnPropertyChanged();
                 }
             }
@@ -382,6 +409,8 @@ namespace SourceGit.ViewModels
                     {
                         Native.OS.AutoSelectExternalMergeToolExecFile();
                         OnPropertyChanged(nameof(ExternalMergeToolPath));
+                        OnPropertyChanged(nameof(ExternalMergeToolDiffArgs));
+                        OnPropertyChanged(nameof(ExternalMergeToolMergeArgs));
                     }
                 }
             }
@@ -395,6 +424,32 @@ namespace SourceGit.ViewModels
                 if (!Native.OS.ExternalMergerExecFile.Equals(value, StringComparison.Ordinal))
                 {
                     Native.OS.ExternalMergerExecFile = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ExternalMergeToolDiffArgs
+        {
+            get => Native.OS.ExternalDiffArgs;
+            set
+            {
+                if (!Native.OS.ExternalDiffArgs.Equals(value, StringComparison.Ordinal))
+                {
+                    Native.OS.ExternalDiffArgs = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ExternalMergeToolMergeArgs
+        {
+            get => Native.OS.ExternalMergeArgs;
+            set
+            {
+                if (!Native.OS.ExternalMergeArgs.Equals(value, StringComparison.Ordinal))
+                {
+                    Native.OS.ExternalMergeArgs = value;
                     OnPropertyChanged();
                 }
             }
@@ -596,7 +651,7 @@ namespace SourceGit.ViewModels
 
         private void PrepareShellOrTerminal()
         {
-            if (_shellOrTerminal >= 0)
+            if (_shellOrTerminalType >= 0)
                 return;
 
             for (int i = 0; i < Models.ShellOrTerminal.Supported.Count; i++)
@@ -604,9 +659,22 @@ namespace SourceGit.ViewModels
                 var shell = Models.ShellOrTerminal.Supported[i];
                 if (Native.OS.TestShellOrTerminal(shell))
                 {
-                    ShellOrTerminal = i;
+                    ShellOrTerminalType = i;
                     break;
                 }
+            }
+        }
+
+        private void PrepareExternalDiffMergeTool()
+        {
+            var mergerType = Native.OS.ExternalMergerType;
+            if (mergerType > 0 && mergerType < Models.ExternalMerger.Supported.Count)
+            {
+                var merger = Models.ExternalMerger.Supported[mergerType];
+                if (string.IsNullOrEmpty(Native.OS.ExternalDiffArgs))
+                    Native.OS.ExternalDiffArgs = merger.DiffCmd;
+                if (string.IsNullOrEmpty(Native.OS.ExternalMergeArgs))
+                    Native.OS.ExternalMergeArgs = merger.MergeCmd;
             }
         }
 
@@ -708,10 +776,12 @@ namespace SourceGit.ViewModels
         private double _defaultFontSize = 13;
         private double _editorFontSize = 13;
         private int _editorTabWidth = 4;
+        private double _zoom = 1.0;
         private LayoutInfo _layout = new();
 
         private int _maxHistoryCommits = 20000;
         private int _subjectGuideLength = 50;
+        private bool _useFixedTabWidth = true;
         private bool _useAutoHideScrollBars = true;
         private bool _useGitHubStyleAvatar = true;
         private bool _showAuthorTimeInGraph = false;
@@ -740,7 +810,7 @@ namespace SourceGit.ViewModels
         private Models.ChangeViewMode _stashChangeViewMode = Models.ChangeViewMode.List;
 
         private string _gitDefaultCloneDir = string.Empty;
-        private int _shellOrTerminal = -1;
+        private int _shellOrTerminalType = -1;
         private uint _statisticsSampleColor = 0xFF00FF00;
     }
 }

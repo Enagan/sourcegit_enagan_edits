@@ -5,7 +5,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Avalonia;
 using Avalonia.Threading;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
@@ -51,6 +53,9 @@ namespace SourceGit.ViewModels
             get => _commit;
             set
             {
+                if (_commit != null && value != null && _commit.SHA.Equals(value.SHA, StringComparison.Ordinal))
+                    return;
+
                 if (SetProperty(ref _commit, value))
                     Refresh();
             }
@@ -155,6 +160,12 @@ namespace SourceGit.ViewModels
         {
             get => _canOpenRevisionFileWithDefaultEditor;
             private set => SetProperty(ref _canOpenRevisionFileWithDefaultEditor, value);
+        }
+
+        public Vector ScrollOffset
+        {
+            get => _scrollOffset;
+            set => SetProperty(ref _scrollOffset, value);
         }
 
         public CommitDetail(Repository repo, CommitDetailSharedData sharedData)
@@ -318,7 +329,7 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public async Task OpenRevisionFileWithDefaultEditorAsync(string file)
+        public async Task OpenRevisionFileAsync(string file, Models.ExternalTool tool)
         {
             var fullPath = Native.OS.GetAbsPath(_repo.FullPath, file);
             var fileName = Path.GetFileNameWithoutExtension(fullPath) ?? "";
@@ -329,7 +340,10 @@ namespace SourceGit.ViewModels
                 .RunAsync(_repo.FullPath, _commit.SHA, file, tmpFile)
                 .ConfigureAwait(false);
 
-            Native.OS.OpenWithDefaultEditor(tmpFile);
+            if (tool == null)
+                Native.OS.OpenWithDefaultEditor(tmpFile);
+            else
+                tool.Open(tmpFile);
         }
 
         public async Task SaveRevisionFileAsync(Models.Object file, string saveTo)
@@ -352,6 +366,7 @@ namespace SourceGit.ViewModels
             Children = null;
             RevisionFileSearchFilter = string.Empty;
             RevisionFileSearchSuggestion = null;
+            ScrollOffset = Vector.Zero;
 
             if (_commit == null)
                 return;
@@ -367,7 +382,7 @@ namespace SourceGit.ViewModels
                 var message = await new Commands.QueryCommitFullMessage(_repo.FullPath, _commit.SHA)
                     .GetResultAsync()
                     .ConfigureAwait(false);
-                var inlines = await ParseInlinesInMessageAsync(message);
+                var inlines = await ParseInlinesInMessageAsync(message).ConfigureAwait(false);
 
                 if (!token.IsCancellationRequested)
                     Dispatcher.UIThread.Post(() =>
@@ -637,5 +652,6 @@ namespace SourceGit.ViewModels
         private string _revisionFileSearchFilter = string.Empty;
         private List<string> _revisionFileSearchSuggestion = null;
         private bool _canOpenRevisionFileWithDefaultEditor = false;
+        private Vector _scrollOffset = Vector.Zero;
     }
 }

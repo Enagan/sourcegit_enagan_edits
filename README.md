@@ -6,6 +6,20 @@
 [![latest](https://img.shields.io/github/v/release/sourcegit-scm/sourcegit.svg)](https://github.com/sourcegit-scm/sourcegit/releases/latest)
 [![downloads](https://img.shields.io/github/downloads/sourcegit-scm/sourcegit/total)](https://github.com/sourcegit-scm/sourcegit/releases)
 
+## Screenshots
+
+* Dark Theme
+
+  ![Theme Dark](./screenshots/theme_dark.png)
+
+* Light Theme
+
+  ![Theme Light](./screenshots/theme_light.png)
+
+* Custom
+
+  You can find custom themes from [sourcegit-theme](https://github.com/sourcegit-scm/sourcegit-theme.git). And welcome to share your own themes.
+
 ## Highlights
 
 * Supports Windows/macOS/Linux
@@ -75,12 +89,6 @@ This software creates a folder `$"{System.Environment.SpecialFolder.ApplicationD
 For **Windows** users:
 
 * **MSYS Git is NOT supported**. Please use official [Git for Windows](https://git-scm.com/download/win) instead.
-* You can install the latest stable from `winget` with follow commands:
-  ```shell
-  winget install SourceGit
-  ```
-> [!NOTE]
-> `winget` will install this software as a commandline tool. You need run `SourceGit` from console or `Win+R` at the first time. Then you can add it to the taskbar.
 * You can install the latest stable by `scoop` with follow commands:
   ```shell
   scoop bucket add extras
@@ -88,17 +96,25 @@ For **Windows** users:
   ```
 * Pre-built binaries can be found in [Releases](https://github.com/sourcegit-scm/sourcegit/releases/latest)
 
+> [!NOTE]
+> `git-flow` is no longer shipped with **Git for Windows** since `2.51.1`. You can use it by following these steps:
+>  * Download [git-flow-next](https://github.com/gittower/git-flow-next/releases)
+>  * Unzip & Rename the `git-flow-next` to `git-flow`
+>  * Copy to `$GIT_INSTALL_DIR/cmd` or just add its path to you `PATH` directly
+
 For **macOS** users:
 
-* Thanks [@ybeapps](https://github.com/ybeapps) for making `SourceGit` available on `Homebrew`. You can simply install it with following command:
+* Thanks [@ybeapps](https://github.com/ybeapps) for making `SourceGit` available on `Homebrew`:
   ```shell
-  brew tap ybeapps/homebrew-sourcegit
-  brew install --cask --no-quarantine sourcegit
+  brew install --cask sourcegit
   ```
 * If you want to install `SourceGit.app` from GitHub Release manually, you need run following command to make sure it works:
   ```shell
   sudo xattr -cr /Applications/SourceGit.app
   ```
+> [!NOTE]
+> macOS packages in the `Release` page of this project are all unsigned. If you are worried about potential security issues with the above command, you can download the signed package from the [distribution repository](https://github.com/ybeapps/homebrew-sourcegit/releases) provided by [@ybeapps](https://github.com/ybeapps) (there is no need to execute the above command while installing `SourceGit`).
+
 * Make sure [git-credential-manager](https://github.com/git-ecosystem/git-credential-manager/releases) is installed on your mac.
 * You can run `echo $PATH > ~/Library/Application\ Support/SourceGit/PATH` to generate a custom PATH env file to introduce `PATH` env to SourceGit.
 
@@ -155,19 +171,24 @@ This app supports open repository in external tools listed in the table below.
 | Visual Studio Code - Insiders | YES     | YES   | YES   |
 | VSCodium                      | YES     | YES   | YES   |
 | Cursor                        | YES     | YES   | YES   |
-| Fleet                         | YES     | YES   | YES   |
 | Sublime Text                  | YES     | YES   | YES   |
 | Zed                           | YES     | YES   | YES   |
 | Visual Studio                 | YES     | NO    | NO    |
 
 > [!NOTE]
-> This app will try to find those tools based on some pre-defined or expected locations automatically. If you are using one portable version of these tools, it will not be detected by this app.
-> To solve this problem you can add a file named `external_editors.json` in app data storage directory and provide the path directly. For example:
+> This app will try to find those tools based on some pre-defined or expected locations automatically. If you are using one portable version of these tools, it will not be detected by this app.  
+> To solve this problem you can add a file named `external_editors.json` in app data storage directory and provide the path directly.  
+> User can also exclude some editors by using `external_editors.json`.
+
+The format of `external_editors.json`:
 ```json
 {
     "tools": {
         "Visual Studio Code": "D:\\VSCode\\Code.exe"
-    }
+    },
+    "excludes": [
+        "Visual Studio Community 2019"
+    ]
 }
 ```
 
@@ -184,7 +205,8 @@ You can define your own conventional commit types (per-repository) by following 
   {
     "Name": "New Feature",
     "Type": "Feature",
-    "Description": "Adding a new feature"
+    "Description": "Adding a new feature",
+    "PrefillShortDesc": "this is a test"
   },
   {
     "Name": "Bug Fixes",
@@ -194,20 +216,6 @@ You can define your own conventional commit types (per-repository) by following 
 ]
 ```
 2. Configure the `Conventional Commit Types` in repository configuration window.  
-
-## Screenshots
-
-* Dark Theme
-
-  ![Theme Dark](./screenshots/theme_dark.png)
-
-* Light Theme
-
-  ![Theme Light](./screenshots/theme_light.png)
-
-* Custom
-
-  You can find custom themes from [sourcegit-theme](https://github.com/sourcegit-scm/sourcegit-theme.git). And welcome to share your own themes.
 
 ## Contributing
 

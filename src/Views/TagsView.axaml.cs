@@ -63,19 +63,19 @@ namespace SourceGit.Views
             }
 
             if (node.Tag != null)
-                CreateContent(new Thickness(0, 0, 0, 0), "Icons.Tag");
+                CreateContent(new Thickness(0, 0, 0, 0), "Icons.Tag", node.ToolTip is { IsAnnotated: false });
             else if (node.IsExpanded)
-                CreateContent(new Thickness(0, 2, 0, 0), "Icons.Folder.Open");
+                CreateContent(new Thickness(0, 2, 0, 0), "Icons.Folder.Open", false);
             else
-                CreateContent(new Thickness(0, 2, 0, 0), "Icons.Folder");
+                CreateContent(new Thickness(0, 2, 0, 0), "Icons.Folder", false);
         }
 
-        private void CreateContent(Thickness margin, string iconKey)
+        private void CreateContent(Thickness margin, string iconKey, bool stroke)
         {
             if (this.FindResource(iconKey) is not StreamGeometry geo)
                 return;
 
-            Content = new Avalonia.Controls.Shapes.Path()
+            var path = new Avalonia.Controls.Shapes.Path()
             {
                 Width = 12,
                 Height = 12,
@@ -84,6 +84,15 @@ namespace SourceGit.Views
                 Margin = margin,
                 Data = geo,
             };
+
+            if (stroke)
+            {
+                path.Fill = Brushes.Transparent;
+                path.Stroke = this.FindResource("Brush.FG1") as IBrush;
+                path.StrokeThickness = 1;
+            }
+
+            Content = path;
         }
     }
 
@@ -248,6 +257,24 @@ namespace SourceGit.Views
                     ev.Handled = true;
                 };
 
+                var compareWithHead = new MenuItem();
+                compareWithHead.Header = App.Text("TagCM.CompareWithHead");
+                compareWithHead.Icon = App.CreateMenuIcon("Icons.Compare");
+                compareWithHead.Click += (_, _) =>
+                {
+                    App.ShowWindow(new ViewModels.Compare(repo.FullPath, tag, repo.CurrentBranch));
+                };
+
+                var compareWith = new MenuItem();
+                compareWith.Header = App.Text("TagCM.CompareWith");
+                compareWith.Icon = App.CreateMenuIcon("Icons.Compare");
+                compareWith.Click += (_, _) =>
+                {
+                    var launcher = App.GetLauncher();
+                    if (launcher != null)
+                        launcher.OpenCommandPalette(new ViewModels.CompareCommandPalette(launcher, repo, tag));
+                };
+
                 var archive = new MenuItem();
                 archive.Icon = App.CreateMenuIcon("Icons.Archive");
                 archive.Header = App.Text("Archive");
@@ -263,6 +290,9 @@ namespace SourceGit.Views
                 menu.Items.Add(new MenuItem() { Header = "-" });
                 menu.Items.Add(pushTag);
                 menu.Items.Add(deleteTag);
+                menu.Items.Add(new MenuItem() { Header = "-" });
+                menu.Items.Add(compareWithHead);
+                menu.Items.Add(compareWith);
                 menu.Items.Add(new MenuItem() { Header = "-" });
                 menu.Items.Add(archive);
                 menu.Items.Add(new MenuItem() { Header = "-" });
@@ -337,6 +367,25 @@ namespace SourceGit.Views
             }
             else if (selected.Count > 0)
             {
+                var menu = new ContextMenu();
+
+                if (selected.Count == 2)
+                {
+                    var compare = new MenuItem();
+                    compare.Header = App.Text("TagCM.CompareTwo");
+                    compare.Icon = App.CreateMenuIcon("Icons.Compare");
+                    compare.Click += (_, ev) =>
+                    {
+                        var (based, to) = (selected[0], selected[1]);
+                        if (based.CreatorDate > to.CreatorDate)
+                            (based, to) = (to, based);
+
+                        App.ShowWindow(new ViewModels.Compare(repo.FullPath, based, to));
+                        ev.Handled = true;
+                    };
+                    menu.Items.Add(compare);
+                }
+
                 var deleteMultiple = new MenuItem();
                 deleteMultiple.Header = App.Text("TagCM.DeleteMultiple", selected.Count);
                 deleteMultiple.Icon = App.CreateMenuIcon("Icons.Clear");
@@ -348,7 +397,6 @@ namespace SourceGit.Views
                     ev.Handled = true;
                 };
 
-                var menu = new ContextMenu();
                 menu.Items.Add(deleteMultiple);
                 menu.Open(listBox);
             }

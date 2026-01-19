@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
 {
+    public record TextDiffDisplayRange(int Start, int End);
+
     public record TextDiffSelectedChunk(double Y, double Height, int StartIdx, int EndIdx, bool Combined, bool IsOldSide)
     {
         public static bool IsChanged(TextDiffSelectedChunk oldValue, TextDiffSelectedChunk newValue)
@@ -24,16 +26,10 @@ namespace SourceGit.ViewModels
         }
     }
 
-    public record TextDiffDisplayRange(int Start, int End)
-    {
-    }
-
     public class TextDiffContext : ObservableObject
     {
+        public Models.DiffOption Option => _option;
         public Models.TextDiff Data => _data;
-        public string File => _data.File;
-        public bool IsUnstaged => _data.Option.IsUnstaged;
-        public bool EnableChunkOption => _data.Option.WorkingCopyChange != null;
 
         public Vector ScrollOffset
         {
@@ -134,6 +130,33 @@ namespace SourceGit.ViewModels
             return null;
         }
 
+        protected void TryKeepPrevState(TextDiffContext prev, List<Models.TextDiffLine> lines)
+        {
+            var fastTest = prev != null &&
+                prev._option.IsUnstaged == _option.IsUnstaged &&
+                prev._option.Path.Equals(_option.Path, StringComparison.Ordinal) &&
+                prev._option.OrgPath.Equals(_option.OrgPath, StringComparison.Ordinal) &&
+                prev._option.Revisions.Count == _option.Revisions.Count;
+
+            if (!fastTest)
+            {
+                _blockNavigation = new BlockNavigation(lines, 0);
+                return;
+            }
+
+            for (int i = 0; i < _option.Revisions.Count; i++)
+            {
+                if (!prev._option.Revisions[i].Equals(_option.Revisions[i], StringComparison.Ordinal))
+                {
+                    _blockNavigation = new BlockNavigation(lines, 0);
+                    return;
+                }
+            }
+
+            _blockNavigation = new BlockNavigation(lines, prev._blockNavigation.GetCurrentBlockIndex());
+        }
+
+        protected Models.DiffOption _option = null;
         protected Models.TextDiff _data = null;
         protected Vector _scrollOffset = Vector.Zero;
         protected BlockNavigation _blockNavigation = null;
@@ -144,18 +167,17 @@ namespace SourceGit.ViewModels
 
     public class CombinedTextDiff : TextDiffContext
     {
-        public CombinedTextDiff(Models.TextDiff diff, CombinedTextDiff previous = null)
+        public CombinedTextDiff(Models.DiffOption option, Models.TextDiff diff, TextDiffContext previous = null)
         {
+            _option = option;
             _data = diff;
-            _blockNavigation = new BlockNavigation(_data.Lines);
 
-            if (previous != null && previous.File.Equals(File, StringComparison.Ordinal))
-                _scrollOffset = previous.ScrollOffset;
+            TryKeepPrevState(previous, _data.Lines);
         }
 
         public override TextDiffContext SwitchMode()
         {
-            return new TwoSideTextDiff(_data);
+            return new TwoSideTextDiff(_option, _data, this);
         }
     }
 
@@ -164,8 +186,9 @@ namespace SourceGit.ViewModels
         public List<Models.TextDiffLine> Old { get; } = [];
         public List<Models.TextDiffLine> New { get; } = [];
 
-        public TwoSideTextDiff(Models.TextDiff diff, TwoSideTextDiff previous = null)
+        public TwoSideTextDiff(Models.DiffOption option, Models.TextDiff diff, TextDiffContext previous = null)
         {
+            _option = option;
             _data = diff;
 
             foreach (var line in diff.Lines)
@@ -187,10 +210,7 @@ namespace SourceGit.ViewModels
             }
 
             FillEmptyLines();
-            _blockNavigation = new BlockNavigation(Old);
-
-            if (previous != null && previous.File.Equals(File, StringComparison.Ordinal))
-                _scrollOffset = previous._scrollOffset;
+            TryKeepPrevState(previous, Old);
         }
 
         public override bool IsSideBySide()
@@ -200,10 +220,10 @@ namespace SourceGit.ViewModels
 
         public override TextDiffContext SwitchMode()
         {
-            return new CombinedTextDiff(_data);
+            return new CombinedTextDiff(_option, _data, this);
         }
 
-        public void ConvertsToCombinedRange(ref int startLine, ref int endLine, bool isOldSide)
+        public void GetCombinedRangeForSingleSide(ref int startLine, ref int endLine, bool isOldSide)
         {
             endLine = Math.Min(endLine, _data.Lines.Count - 1);
 
@@ -240,6 +260,32 @@ namespace SourceGit.ViewModels
             var endContent = oneSide[endContentLine];
             startLine = _data.Lines.IndexOf(firstContent);
             endLine = _data.Lines.IndexOf(endContent);
+        }
+
+        public void GetCombinedRangeForBothSides(ref int startLine, ref int endLine, bool isOldSide)
+        {
+            var fromSide = isOldSide ? Old : New;
+            endLine = Math.Min(endLine, fromSide.Count - 1);
+
+            // Since this function is only used for auto-detected hunk, we just need to find out the a first changed line
+            // and then use `FindRangeByIndex` to get the range of hunk.
+            for (int i = startLine; i <= endLine; i++)
+            {
+                var line = fromSide[i];
+                if (line.Type == Models.TextDiffLineType.Added || line.Type == Models.TextDiffLineType.Deleted)
+                {
+                    (startLine, endLine) = FindRangeByIndex(_data.Lines, _data.Lines.IndexOf(line));
+                    return;
+                }
+
+                if (line.Type == Models.TextDiffLineType.None)
+                {
+                    var otherSide = isOldSide ? New : Old;
+                    var changedLine = otherSide[i]; // Find the changed line on the other side in the same position
+                    (startLine, endLine) = FindRangeByIndex(_data.Lines, _data.Lines.IndexOf(changedLine));
+                    return;
+                }
+            }
         }
 
         private void FillEmptyLines()

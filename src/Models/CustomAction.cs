@@ -10,6 +10,7 @@ namespace SourceGit.Models
         Branch,
         Tag,
         Remote,
+        File,
     }
 
     public enum CustomActionControlType
@@ -27,6 +28,8 @@ namespace SourceGit.Models
         Pull,
         Push
     }
+    
+    public record CustomActionTargetFile(string File, Commit Revision);
 
     public class CustomActionControl : ObservableObject
     {

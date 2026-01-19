@@ -1,13 +1,22 @@
+using System;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
 {
+    public enum BlockNavigationDirection
+    {
+        First = 0,
+        Prev,
+        Next,
+        Last
+    }
+
     public class BlockNavigation : ObservableObject
     {
         public record Block(int Start, int End)
         {
-            public bool IsInRange(int line)
+            public bool Contains(int line)
             {
                 return line >= Start && line <= End;
             }
@@ -27,13 +36,15 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public BlockNavigation(List<Models.TextDiffLine> lines)
+        public BlockNavigation(List<Models.TextDiffLine> lines, int cur)
         {
             _blocks.Clear();
-            _current = -1;
 
             if (lines.Count == 0)
+            {
+                _current = -1;
                 return;
+            }
 
             var lineIdx = 0;
             var blockStartIdx = 0;
@@ -65,6 +76,12 @@ namespace SourceGit.ViewModels
                 blocks.Add(new Block(blockStartIdx, lines.Count));
 
             _blocks.AddRange(blocks);
+            _current = Math.Min(_blocks.Count - 1, cur);
+        }
+
+        public int GetCurrentBlockIndex()
+        {
+            return _current;
         }
 
         public Block GetCurrentBlock()
@@ -75,48 +92,20 @@ namespace SourceGit.ViewModels
             return null;
         }
 
-        public Block GotoFirst()
+        public Block Goto(BlockNavigationDirection direction)
         {
             if (_blocks.Count == 0)
                 return null;
 
-            _current = 0;
-            OnPropertyChanged(nameof(Indicator));
-            return _blocks[_current];
-        }
+            _current = direction switch
+            {
+                BlockNavigationDirection.First => 0,
+                BlockNavigationDirection.Prev => _current <= 0 ? 0 : _current - 1,
+                BlockNavigationDirection.Next => _current >= _blocks.Count - 1 ? _blocks.Count - 1 : _current + 1,
+                BlockNavigationDirection.Last => _blocks.Count - 1,
+                _ => _current
+            };
 
-        public Block GotoPrev()
-        {
-            if (_blocks.Count == 0)
-                return null;
-
-            if (_current == -1)
-                _current = 0;
-            else if (_current > 0)
-                _current--;
-
-            OnPropertyChanged(nameof(Indicator));
-            return _blocks[_current];
-        }
-
-        public Block GotoNext()
-        {
-            if (_blocks.Count == 0)
-                return null;
-
-            if (_current < _blocks.Count - 1)
-                _current++;
-
-            OnPropertyChanged(nameof(Indicator));
-            return _blocks[_current];
-        }
-
-        public Block GotoLast()
-        {
-            if (_blocks.Count == 0)
-                return null;
-
-            _current = _blocks.Count - 1;
             OnPropertyChanged(nameof(Indicator));
             return _blocks[_current];
         }
@@ -126,7 +115,7 @@ namespace SourceGit.ViewModels
             if (_current >= 0 && _current < _blocks.Count)
             {
                 var block = _blocks[_current];
-                if (block.IsInRange(caretLine))
+                if (block.Contains(caretLine))
                     return;
             }
 

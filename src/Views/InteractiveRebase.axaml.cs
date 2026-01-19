@@ -85,13 +85,94 @@ namespace SourceGit.Views
         }
     }
 
+    public class InteractiveRebaseIndicator : Control
+    {
+        public static readonly StyledProperty<IBrush> FillProperty =
+            AvaloniaProperty.Register<InteractiveRebaseIndicator, IBrush>(nameof(Fill), Brushes.Transparent);
+
+        public IBrush Fill
+        {
+            get => GetValue(FillProperty);
+            set => SetValue(FillProperty, value);
+        }
+
+        public static readonly StyledProperty<Models.InteractiveRebasePendingType> PendingTypeProperty =
+            AvaloniaProperty.Register<InteractiveRebaseIndicator, Models.InteractiveRebasePendingType>(nameof(PendingType));
+
+        public Models.InteractiveRebasePendingType PendingType
+        {
+            get => GetValue(PendingTypeProperty);
+            set => SetValue(PendingTypeProperty, value);
+        }
+
+        public override void Render(DrawingContext context)
+        {
+            base.Render(context);
+
+            if (PendingType == Models.InteractiveRebasePendingType.None)
+                return;
+
+            var startW = 4;
+            var endW = Bounds.Width - 6;
+            var height = Bounds.Height;
+            var halfH = height * 0.5;
+            var fill = Fill;
+
+            if (PendingType == Models.InteractiveRebasePendingType.Last)
+            {
+                var center = new Point(startW, halfH);
+                context.DrawEllipse(fill, null, center, 4, 4);
+                context.DrawLine(new Pen(fill, 2), center, new Point(startW, height));
+            }
+            else if (PendingType == Models.InteractiveRebasePendingType.Ignore)
+            {
+                context.DrawLine(new Pen(fill, 2), new Point(startW, 0), new Point(startW, height));
+            }
+            else if (PendingType == Models.InteractiveRebasePendingType.Pending)
+            {
+                context.DrawEllipse(fill, null, new Point(startW, halfH), 4, 4);
+                context.DrawLine(new Pen(fill, 2), new Point(startW, 0), new Point(startW, height));
+            }
+            else
+            {
+                var geoPath = new StreamGeometry();
+                using (var ctx = geoPath.Open())
+                {
+                    ctx.BeginFigure(new Point(startW, 0), false);
+                    ctx.QuadraticBezierTo(new Point(startW, halfH), new Point(endW, halfH));
+                    ctx.EndFigure(false);
+                }
+                context.DrawGeometry(null, new Pen(fill, 2), geoPath);
+
+                var geoArrow = new StreamGeometry();
+                using (var ctx = geoPath.Open())
+                {
+                    ctx.BeginFigure(new Point(endW, halfH), true);
+                    ctx.LineTo(new Point(endW - 4, halfH + 2));
+                    ctx.LineTo(new Point(endW - 4, halfH - 2));
+                    ctx.EndFigure(true);
+                }
+                context.DrawGeometry(fill, null, geoArrow);
+            }
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == FillProperty ||
+                change.Property == PendingTypeProperty)
+                InvalidateVisual();
+        }
+    }
+
     public partial class InteractiveRebase : ChromelessWindow
     {
         public InteractiveRebase()
         {
             CloseOnESC = true;
             InitializeComponent();
-            IRItemListBox?.Focus();
+            ItemListBox?.Focus();
         }
 
         public void OpenCommitMessageEditor(ViewModels.InteractiveRebaseItem item)
@@ -100,7 +181,14 @@ namespace SourceGit.Views
                 return;
 
             var dialog = new CommitMessageEditor();
-            dialog.AsBuiltin(vm.ConventionalTypesOverride, item.FullMessage, msg => item.FullMessage = msg);
+            dialog.AsBuiltin(vm.ConventionalTypesOverride, item.FullMessage, msg =>
+            {
+                if (msg.Equals(item.FullMessage, StringComparison.Ordinal))
+                    return;
+
+                item.FullMessage = msg;
+                item.IsMessageUserEdited = true;
+            });
             dialog.ShowDialog(this);
         }
 
@@ -118,7 +206,7 @@ namespace SourceGit.Views
             if (isFirstTimeHere)
                 _firstSelectionChangedHandled = true;
 
-            var selected = IRItemListBox.SelectedItems ?? new List<object>();
+            var selected = ItemListBox.SelectedItems ?? new List<object>();
             var items = new List<ViewModels.InteractiveRebaseItem>();
             foreach (var item in selected)
             {
@@ -142,10 +230,10 @@ namespace SourceGit.Views
                 return;
 
             var builder = new StringBuilder();
-            var selected = IRItemListBox.SelectedItems ?? new List<object>();
+            var selected = ItemListBox.SelectedItems ?? new List<object>();
             if (selected.Count > 0 && !selected.Contains(item))
             {
-                IRItemListBox.SelectedItem = item;
+                ItemListBox.SelectedItem = item;
                 builder.Append(item.Commit.SHA).Append(';');
             }
             else
@@ -164,7 +252,7 @@ namespace SourceGit.Views
 
         private void OnRowDragOver(object sender, DragEventArgs e)
         {
-            if (DataContext is not ViewModels.InteractiveRebase vm)
+            if (DataContext is not ViewModels.InteractiveRebase)
                 return;
 
             if (e.DataTransfer.TryGetValue(_dndItemFormat) is not { Length: > 0 } hashes)
@@ -178,9 +266,7 @@ namespace SourceGit.Views
 
             var p = e.GetPosition(control);
             var before = p.Y < control.Bounds.Height * 0.5;
-
-            dst.IsDropBeforeVisible = before;
-            dst.IsDropAfterVisible = !before;
+            dst.DropDirectionIndicator = before ? new Thickness(0, 2, 0, 0) : new Thickness(0, 0, 0, 2);
             e.DragEffects = DragDropEffects.Move;
             e.Handled = true;
         }
@@ -190,8 +276,7 @@ namespace SourceGit.Views
             if (sender is not Control { DataContext: ViewModels.InteractiveRebaseItem dst })
                 return;
 
-            dst.IsDropBeforeVisible = false;
-            dst.IsDropAfterVisible = false;
+            dst.DropDirectionIndicator = new Thickness(0);
             e.Handled = true;
         }
 
@@ -209,7 +294,7 @@ namespace SourceGit.Views
             if (hashes.IndexOf(dst.Commit.SHA, StringComparison.Ordinal) >= 0)
                 return;
 
-            var selected = IRItemListBox.SelectedItems ?? new List<object>();
+            var selected = ItemListBox.SelectedItems ?? new List<object>();
             if (selected.Count == 0)
                 return;
 
@@ -225,10 +310,9 @@ namespace SourceGit.Views
             }
 
             vm.Move(commits, before ? idx : idx + 1);
-            IRItemListBox.SelectedItems = commits;
+            ItemListBox.SelectedItems = commits;
 
-            dst.IsDropBeforeVisible = false;
-            dst.IsDropAfterVisible = false;
+            dst.DropDirectionIndicator = new Thickness(0);
             e.DragEffects = DragDropEffects.None;
             e.Handled = true;
         }
@@ -238,7 +322,7 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.InteractiveRebase vm)
                 return;
 
-            if (IRItemListBox.SelectedItems is not { Count: > 0 } selected)
+            if (ItemListBox.SelectedItems is not { Count: > 0 } selected)
                 return;
 
             var hashes = new HashSet<string>();
@@ -263,7 +347,7 @@ namespace SourceGit.Views
             }
 
             vm.Move(items, idx);
-            IRItemListBox.SelectedItems = items;
+            ItemListBox.SelectedItems = items;
             e.Handled = true;
         }
 
@@ -272,7 +356,7 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.InteractiveRebase vm)
                 return;
 
-            if (IRItemListBox.SelectedItems is not { Count: > 0 } selected)
+            if (ItemListBox.SelectedItems is not { Count: > 0 } selected)
                 return;
 
             var hashes = new HashSet<string>();
@@ -297,7 +381,7 @@ namespace SourceGit.Views
             }
 
             vm.Move(items, idx);
-            IRItemListBox.SelectedItems = items;
+            ItemListBox.SelectedItems = items;
             e.Handled = true;
         }
 
@@ -377,7 +461,7 @@ namespace SourceGit.Views
             menuItem.Icon = new Ellipse() { Width = 14, Height = 14, Fill = iconBrush };
             menuItem.Header = header;
             menuItem.Tag = hotkey;
-            menuItem.Click += (_, __) => ChangeItemsAction(item, action);
+            menuItem.Click += (_, _) => ChangeItemsAction(item, action);
 
             flyout.Items.Add(menuItem);
         }
@@ -387,7 +471,7 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.InteractiveRebase vm)
                 return;
 
-            var selected = IRItemListBox.SelectedItems ?? new List<object>();
+            var selected = ItemListBox.SelectedItems ?? new List<object>();
             var items = new List<ViewModels.InteractiveRebaseItem>();
             foreach (var item in selected)
             {
@@ -407,7 +491,7 @@ namespace SourceGit.Views
                 OpenCommitMessageEditor(items[0]);
         }
 
-        private bool _firstSelectionChangedHandled = false;
+        private bool _firstSelectionChangedHandled;
         private readonly DataFormat<string> _dndItemFormat = DataFormat.CreateStringApplicationFormat("sourcegit-dnd-ir-item");
     }
 }
