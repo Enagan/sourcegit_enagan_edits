@@ -33,21 +33,21 @@
           <UniformGrid Grid.Row="0" Rows="1" Margin="0,0">
             <!-- Author -->
             <Grid ColumnDefinitions="Auto, Auto">
-              <v:Avatar Grid.Column="0" Width="36" Height="36" Margin="8,0,8,0" User="{Binding Commit.Author}" />
-              <StackPanel Grid.Column="1" Margin="8,0,8,0" Orientation="Vertical">
-                <Grid Margin="0,10,0,8" ColumnDefinitions="Auto,*" ClipToBounds="True">
-                  <v:EnhancedSelectableTextBlock Grid.Column="0" Text="{Binding Commit.Author.Name}" Margin="2,0,8,0" />
-                  <v:EnhancedSelectableTextBlock Grid.Column="1" Text="{Binding Commit.Author.Email}"
-                                                 ToolTip.Tip="{Binding Commit.Author.Email}"
-                                                 Foreground="{DynamicResource Brush.FG2}"
-                                                 TextTrimming="CharacterEllipsis" />
-                </Grid>
-                <v:EnhancedSelectableTextBlock Text="{Binding Commit.AuthorTimeStr}"
-                                               Margin="2,0,0,0"
-                                               FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize, Converter={x:Static c:DoubleConverters.Decrease}}"
-                                               Foreground="{DynamicResource Brush.FG2}" />
-              </StackPanel>
-            </Grid>
+            <v:Avatar Grid.Column="0" Width="36" Height="36" Margin="8,0,8,0" User="{Binding Commit.Author}"/>
+            <StackPanel Grid.Column="1" Margin="8,0,8,0" Orientation="Vertical">
+              <TextBlock Classes="group_header_label" Text="{DynamicResource Text.CommitDetail.Info.Author}"/>
+              <Border Margin="0,10,0,8" Background="Transparent" ToolTip.Tip="{Binding Commit.Author}" Tag="{Binding Commit.Author}">
+                <TextBlock Foreground="{DynamicResource Brush.FG2}" TextTrimming="CharacterEllipsis">
+                  <Run Text="{Binding Commit.Author.Name, Mode=OneWay}" Foreground="{DynamicResource Brush.FG1}"/>
+                  <Run Text="{Binding Commit.Author.Email, Mode=OneWay}"/>
+                </TextBlock>
+              </Border>
+              <TextBlock Text="{Binding Commit.AuthorTimeStr}"
+                         Margin="2,0,0,0"
+                         FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize, Converter={x:Static c:DoubleConverters.Decrease}}"
+                         Foreground="{DynamicResource Brush.FG2}"/>
+            </StackPanel>
+          </Grid>
           </UniformGrid>
 
           <!-- Line -->
